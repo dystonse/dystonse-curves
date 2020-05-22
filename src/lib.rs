@@ -1,6 +1,6 @@
 use std::ops::{Add, Sub, Mul, Div};
 use std::cmp::{PartialOrd};
-use fixed::types::U1F7;
+use fixed::types::{U1F7, U1F15};
 use fixed::traits::{LossyFrom};
 use half::prelude::*;
 
@@ -41,6 +41,16 @@ impl ConvertF32 for U1F7 {
     }
 }
 
+impl ConvertF32 for U1F15 {
+    fn make_into_f32(self) -> f32 {
+        return f32::lossy_from(self);
+    }
+
+    fn make_from_f32(value: f32) -> Self {
+        return U1F15::from_num(value);
+    }
+}
+
 impl ConvertF32 for f16 {
     fn make_into_f32(self) -> f32 {
         return self.to_f32();
@@ -68,6 +78,7 @@ pub trait Curve<X, Y>
     fn max_x(&self) -> X;
     fn y_at_x(&self, x: X) -> Y;
     fn x_at_y(&self, y: Y) -> X;
+    fn new(n: usize, s: X, x0: X, y: Vec<Y>) -> Self;
 }
 
 /**
@@ -86,6 +97,12 @@ impl<X, Y> Curve<X, Y> for RegularDynamicCurve<X, Y>
     where X: ConvertF32 + Copy + Sub<X, Output = X> + Add<X, Output = X> + Div<X, Output = X> + Mul<X, Output = X> + PartialOrd,
           Y: ConvertF32 + Copy
 {
+    fn new(n: usize, s: X, x0: X, y: Vec<Y>) -> Self {
+        return Self{
+            n,s,x0,y
+        };
+    }
+
     fn min_x(&self) -> X {
         return self.x0;
     }
@@ -160,140 +177,63 @@ impl<X, Y> Curve<X, Y> for RegularDynamicCurve<X, Y>
 mod tests {
     use crate::{Curve, RegularDynamicCurve, ConvertF32};
     use assert_approx_eq::assert_approx_eq;
-    use fixed::types::U1F7;
+    use fixed::types::{U1F7, U1F15};
     use half::prelude::*;
 
     #[test]
-    fn test_float_x() {
-        let c : RegularDynamicCurve<f32, f32> = RegularDynamicCurve {
-            n: 3,
-            x0: 10.0,
-            s: 10.0,
-            y: vec!{0.0, 0.6, 1.0}
-        };
+    fn test_all() {
+        test_curve::<RegularDynamicCurve<f32,   f32>, f32,   f32>(true , 0.000001);
+        test_curve::<RegularDynamicCurve< i8,   f32>,  i8,   f32>(false, 0.000001);
+        test_curve::<RegularDynamicCurve<f32,  U1F7>, f32,  U1F7>(true , 0.05);
+        test_curve::<RegularDynamicCurve<f32, U1F15>, f32, U1F15>(true , 0.0005);
+        test_curve::<RegularDynamicCurve<f32,   f16>, f32,   f16>(true , 0.005);
+    }
+
+    fn test_curve<T, X, Y>(test_float_x: bool, epsilon: f32) 
+        where X: ConvertF32,
+              Y: ConvertF32,
+              T: Curve<X, Y>
+        {
+        let c : T = T::new(
+            3,
+            X::make_from_f32(10.0),
+            X::make_from_f32(10.0),
+            vec!{
+                Y::make_from_f32(0.0), 
+                Y::make_from_f32(0.6), 
+                Y::make_from_f32(1.0)}
+        );
 
         // Test x bounds
-        assert_eq!(c.min_x(), 10.0);
-        assert_eq!(c.max_x(), 30.0);
+        assert_eq!(c.min_x().make_into_f32(), 10.0);
+        assert_eq!(c.max_x().make_into_f32(), 30.0);
 
         // Test x outside of bounds
-        assert_eq!(c.y_at_x(0.0), 0.0);
-        assert_eq!(c.y_at_x(100.0), 1.0);
+        assert_eq!(c.y_at_x(X::make_from_f32(0.0)).make_into_f32(), 0.0);
+        assert_eq!(c.y_at_x(X::make_from_f32(100.0)).make_into_f32(), 1.0);
 
         // Test x equal to the actual points
-        assert_eq!(c.y_at_x(10.0), 0.0);
-        assert_eq!(c.y_at_x(20.0), 0.6);
-        assert_eq!(c.y_at_x(30.0), 1.0);
+        assert_approx_eq!(c.y_at_x(X::make_from_f32(10.0)).make_into_f32(), 0.0, epsilon);
+        assert_approx_eq!(c.y_at_x(X::make_from_f32(20.0)).make_into_f32(), 0.6, epsilon);
+        assert_approx_eq!(c.y_at_x(X::make_from_f32(30.0)).make_into_f32(), 1.0, epsilon);
 
         // Test arbitrary "integer" x values
-        assert_eq!(c.y_at_x(15.0), 0.3);
-        assert_eq!(c.y_at_x(25.0), 0.8);
+        assert_approx_eq!(c.y_at_x(X::make_from_f32(15.0)).make_into_f32(), 0.3, epsilon);
+        assert_approx_eq!(c.y_at_x(X::make_from_f32(25.0)).make_into_f32(), 0.8, epsilon);
 
-        // Test arbitrary "float" x values
-        assert_approx_eq!(c.y_at_x(12.5), 0.15);
-        assert_approx_eq!(c.y_at_x(17.5), 0.45);
+        if test_float_x {
+            // Test arbitrary "float" x values
+            assert_approx_eq!(c.y_at_x(X::make_from_f32(12.5)).make_into_f32(), 0.15, epsilon);
+            assert_approx_eq!(c.y_at_x(X::make_from_f32(17.5)).make_into_f32(), 0.45, epsilon);
+        }
 
         // Test y queries
-        assert_eq!(c.x_at_y(0.0), 10.0);
-        assert_eq!(c.x_at_y(1.0), 30.0);
-        assert_eq!(c.x_at_y(0.6), 20.0);
-        assert_eq!(c.x_at_y(0.15), 12.5);
-        assert_eq!(c.x_at_y(0.45), 17.5);
-    }
-
-    #[test]
-    fn test_int_x() {
-        let c : RegularDynamicCurve<i8, f32> = RegularDynamicCurve {
-            n: 3,
-            x0: 10,
-            s: 10,
-            y: vec!{0.0, 0.6, 1.0}
-        };
-
-        // Test x bounds
-        assert_eq!(c.min_x(), 10);
-        assert_eq!(c.max_x(), 30);
-
-        // Test x outside of bounds
-        assert_eq!(c.y_at_x(0), 0.0);
-        assert_eq!(c.y_at_x(100), 1.0);
-
-        // Test x equal to the actual points
-        assert_eq!(c.y_at_x(10), 0.0);
-        assert_eq!(c.y_at_x(20), 0.6);
-        assert_eq!(c.y_at_x(30), 1.0);
-
-        // Test arbitrary "integer" x values
-        assert_eq!(c.y_at_x(15), 0.3);
-        assert_eq!(c.y_at_x(25), 0.8);
-
-        // Test arbitrary "float" x values
-        assert_approx_eq!(c.y_at_x(12), 0.15, 0.031);
-        assert_approx_eq!(c.y_at_x(17), 0.45, 0.031);
-
-        // Test y queries
-        assert_eq!(c.x_at_y(0.0), 10);
-        assert_eq!(c.x_at_y(1.0), 30);
-        assert_eq!(c.x_at_y(0.6), 20);
-        assert_eq!(c.x_at_y(0.15), 12);
-        assert_eq!(c.x_at_y(0.45), 17);
-    }
-
-    #[test]
-    fn test_fixed_y() {
-        let c : RegularDynamicCurve<f32, U1F7> = RegularDynamicCurve {
-            n: 3,
-            x0: 10.0,
-            s: 10.0,
-            y: vec!{U1F7::from_num(0.0), 
-                    U1F7::from_num(0.6), 
-                    U1F7::from_num(1.0)}
-        };
-
-        // Test x outside of bounds
-        assert_approx_eq!(c.y_at_x(0.0).make_into_f32(), 0.0, 0.03);
-        assert_approx_eq!(c.y_at_x(100.0).make_into_f32(), 1.0, 0.03);
-
-        // Test x equal to the actual points
-        assert_approx_eq!(c.y_at_x(10.0).make_into_f32(), 0.0, 0.03);
-        assert_approx_eq!(c.y_at_x(20.0).make_into_f32(), 0.6, 0.03);
-        assert_approx_eq!(c.y_at_x(30.0).make_into_f32(), 1.0, 0.03);
-
-        // Test arbitrary "integer" x values
-        assert_approx_eq!(c.y_at_x(15.0).make_into_f32(), 0.3, 0.03);
-        assert_approx_eq!(c.y_at_x(25.0).make_into_f32(), 0.8, 0.03);
-
-        // Test arbitrary "float" x values
-        assert_approx_eq!(c.y_at_x(12.5).make_into_f32(), 0.15, 0.03);
-        assert_approx_eq!(c.y_at_x(17.5).make_into_f32(), 0.45, 0.03);
-    }
-
-    #[test]
-    fn test_half_y() {
-        let c : RegularDynamicCurve<f32, f16> = RegularDynamicCurve {
-            n: 3,
-            x0: 10.0,
-            s: 10.0,
-            y: vec!{f16::from_f32(0.0), 
-                    f16::from_f32(0.6), 
-                    f16::from_f32(1.0)}
-        };
-
-        // Test x outside of bounds
-        assert_approx_eq!(c.y_at_x(0.0).make_into_f32(), 0.0, 0.003);
-        assert_approx_eq!(c.y_at_x(100.0).make_into_f32(), 1.0, 0.003);
-
-        // Test x equal to the actual points
-        assert_approx_eq!(c.y_at_x(10.0).make_into_f32(), 0.0, 0.003);
-        assert_approx_eq!(c.y_at_x(20.0).make_into_f32(), 0.6, 0.003);
-        assert_approx_eq!(c.y_at_x(30.0).make_into_f32(), 1.0, 0.003);
-
-        // Test arbitrary "integer" x values
-        assert_approx_eq!(c.y_at_x(15.0).make_into_f32(), 0.3, 0.003);
-        assert_approx_eq!(c.y_at_x(25.0).make_into_f32(), 0.8, 0.003);
-
-        // Test arbitrary "float" x values
-        assert_approx_eq!(c.y_at_x(12.5).make_into_f32(), 0.15, 0.003);
-        assert_approx_eq!(c.y_at_x(17.5).make_into_f32(), 0.45, 0.003);
+        assert_approx_eq!(c.x_at_y(Y::make_from_f32(0.0)).make_into_f32(), 10.0, epsilon);
+        assert_approx_eq!(c.x_at_y(Y::make_from_f32(1.0)).make_into_f32(), 30.0, epsilon);
+        assert_approx_eq!(c.x_at_y(Y::make_from_f32(0.6)).make_into_f32(), 20.0, epsilon);
+        if test_float_x {
+            assert_approx_eq!(c.x_at_y(Y::make_from_f32(0.15)).make_into_f32(), 12.5, epsilon);
+            assert_approx_eq!(c.x_at_y(Y::make_from_f32(0.45)).make_into_f32(), 17.5, epsilon);
+        }
     }
 }
