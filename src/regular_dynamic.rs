@@ -1,25 +1,21 @@
-use crate::conversion::ConvertF32;
+use crate::conversion::LikeANumber;
 use crate::{Curve, TypedCurve};
 
-use std::ops::{Add, Sub, Mul, Div};
-use std::cmp::{PartialOrd};
 /**
  * A curve that has a dynamic length and data points at regular distances.
  */
 pub struct RegularDynamicCurve<X, Y> 
-    where X: ConvertF32,
-          Y: ConvertF32 {
+where X: LikeANumber, Y: LikeANumber {
     n: usize,
     s: X,
     x0: X,
     y: Vec<Y>
 }
 
-impl<X, Y> Curve for RegularDynamicCurve<X, Y>
-where X: ConvertF32 + Copy + Sub<X, Output = X> + Add<X, Output = X> + Div<X, Output = X> + Mul<X, Output = X> + PartialOrd,
-Y: ConvertF32 + Copy
+impl<X, Y> RegularDynamicCurve<X, Y>
+where X: LikeANumber, Y: LikeANumber
 {
-    fn new(n: usize, s: f32, x0: f32, y: Vec<f32>) -> Self {
+    pub fn new(n: usize, s: f32, x0: f32, y: Vec<f32>) -> Self {
         return Self{
             n,
             s: X::make_from_f32(s),
@@ -28,6 +24,16 @@ Y: ConvertF32 + Copy
         };
     }
 
+    pub fn typed_new(n: usize, s: X, x0: X, y: Vec<Y>) -> Self {
+        return Self{
+            n,s,x0,y
+        };
+    }
+}
+
+impl<X, Y> Curve for RegularDynamicCurve<X, Y>
+where X: LikeANumber, Y: LikeANumber
+{
     fn min_x(&self) -> f32 {
         return self.x0.make_into_f32();
     }
@@ -94,15 +100,8 @@ Y: ConvertF32 + Copy
 }
 
 impl<X, Y> TypedCurve<X, Y> for RegularDynamicCurve<X, Y>
-    where X: ConvertF32 + Copy + Sub<X, Output = X> + Add<X, Output = X> + Div<X, Output = X> + Mul<X, Output = X> + PartialOrd,
-          Y: ConvertF32 + Copy
+where X: LikeANumber, Y: LikeANumber
 {
-    fn typed_new(n: usize, s: X, x0: X, y: Vec<Y>) -> Self {
-        return Self{
-            n,s,x0,y
-        };
-    }
-
     fn typed_min_x(&self) -> X {
         return self.x0;
     }

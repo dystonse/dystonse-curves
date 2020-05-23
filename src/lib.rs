@@ -11,7 +11,6 @@ pub trait Curve
     fn max_x(&self) -> f32;
     fn y_at_x(&self, x: f32) -> f32;
     fn x_at_y(&self, y: f32) -> f32;
-    fn new(n: usize, s: f32, x0: f32, y: Vec<f32>) -> Self;
 }
 
 /**
@@ -24,7 +23,6 @@ pub trait TypedCurve<X, Y>
     fn typed_max_x(&self) -> X;
     fn typed_y_at_x(&self, x: X) -> Y;
     fn typed_x_at_y(&self, y: Y) -> X;
-    fn typed_new(n: usize, s: X, x0: X, y: Vec<Y>) -> Self;
 }
 
 
@@ -35,10 +33,10 @@ pub trait TypedCurve<X, Y>
 mod tests {
     use crate::{Curve, TypedCurve};
     use crate::regular_dynamic::RegularDynamicCurve;
-    use crate::conversion::ConvertF32;
+    use crate::conversion::LikeANumber;
     use assert_approx_eq::assert_approx_eq;
     use fixed::types::{U1F7, U1F15};
-    use half::prelude::*;
+    // use half::prelude::*;
 
     #[test]
     fn test_all() {
@@ -46,33 +44,27 @@ mod tests {
         test_curve::<RegularDynamicCurve< i8,   f32>,  i8,   f32>(false, 0.000001);
         test_curve::<RegularDynamicCurve<f32,  U1F7>, f32,  U1F7>(true , 0.05);
         test_curve::<RegularDynamicCurve<f32, U1F15>, f32, U1F15>(true , 0.0005);
-        test_curve::<RegularDynamicCurve<f32,   f16>, f32,   f16>(true , 0.005);
+        // test_curve::<RegularDynamicCurve<f32,   f16>, f32,   f16>(true , 0.005);
     }
 
     fn test_curve<T, X, Y>(test_float_x: bool, epsilon: f32) 
-    where X: ConvertF32,
-          Y: ConvertF32,
+    where X: LikeANumber,
+          Y: LikeANumber,
           T: Curve + TypedCurve<X, Y>
         {
-            test_curve_typed::<T, X, Y>(test_float_x, epsilon);
-            test_curve_untyped::<T, X, Y>(test_float_x, epsilon);
+            let c = RegularDynamicCurve::<X, Y>::new(
+                3,
+                10.0,
+                10.0,
+                vec!{0.0, 0.6, 1.0}
+            );
+
+            test_curve_typed(&c, test_float_x, epsilon);
+            test_curve_untyped(&c, test_float_x, epsilon);
         }
 
-    fn test_curve_untyped<T, X, Y>(test_float_x: bool, epsilon: f32) 
-        where X: ConvertF32,
-            Y: ConvertF32,
-            T: Curve
+    fn test_curve_untyped(c: & impl Curve, test_float_x: bool, epsilon: f32) 
         {
-        let c : T = T::new(
-            3,
-            10.0,
-            10.0,
-            vec!{
-                0.0, 
-                0.6, 
-                1.0}
-        );
-
         // Test x bounds
         assert_eq!(c.min_x(), 10.0);
         assert_eq!(c.max_x(), 30.0);
@@ -106,21 +98,8 @@ mod tests {
         }
     }
 
-    fn test_curve_typed<T, X, Y>(test_float_x: bool, epsilon: f32) 
-        where X: ConvertF32,
-              Y: ConvertF32,
-              T: TypedCurve<X, Y>
+    fn test_curve_typed<X : LikeANumber, Y : LikeANumber>(c: & impl TypedCurve<X, Y>, test_float_x: bool, epsilon: f32) 
         {
-        let c : T = T::typed_new(
-            3,
-            X::make_from_f32(10.0),
-            X::make_from_f32(10.0),
-            vec!{
-                Y::make_from_f32(0.0), 
-                Y::make_from_f32(0.6), 
-                Y::make_from_f32(1.0)}
-        );
-
         // Test x bounds
         assert_eq!(c.typed_min_x().make_into_f32(), 10.0);
         assert_eq!(c.typed_max_x().make_into_f32(), 30.0);

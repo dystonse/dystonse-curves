@@ -1,6 +1,26 @@
 use fixed::types::{U1F7, U1F15};
 use fixed::traits::{LossyFrom};
 use half::prelude::*;
+use std::ops::{Add, Sub, Mul, Div};
+use std::cmp::{PartialOrd};
+
+pub trait LikeANumber: 
+    ConvertF32 + 
+    Copy + 
+    Sub<Self, Output = Self> + 
+    Add<Self, Output = Self> + 
+    Div<Self, Output = Self> + 
+    Mul<Self, Output = Self> + 
+    PartialOrd
+    {}
+
+impl LikeANumber for f32 {}
+impl LikeANumber for i8 {}
+impl LikeANumber for U1F7 {}
+impl LikeANumber for U1F15 {}
+// TODO mayby add an impl for f16. Because all operators are missing, we'd
+// have to implement them ourselves, possibly by using the conversion
+// from and to f32.
 
 /** 
  * This is an implementation of https://xkcd.com/927/ for 
