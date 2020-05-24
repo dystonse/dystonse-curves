@@ -105,10 +105,11 @@ where
     }
 
     fn simplify_rec(&mut self, tol: f32, start: usize, end: usize, delete_x: &mut Vec<X>) {
+        println!("Simplify from {} to {}…", start, end);
         if end - start <= 2 { // keep all 1 or 2 points
             return;
         }
-        let mut max_d = 0.0;
+        let mut max_d = -1.0;
         let mut max_d_i = 0;
 
         let s = Self::tuple_to_f32(&self.points[start]);
@@ -117,13 +118,14 @@ where
         let n = (e.1 - s.1, s.0 - e.0); // normal vector to se, transposed and one coordinate inverted
         for i in start+1 .. end {
             let d = self.distance(start, end, i, n);
+            println!("  Point #{} at x {} has distance {}.", i, self.points[i].x.make_into_f32(), d);
             if d > max_d {
                 max_d = d;
                 max_d_i = i;
             }
         }
 
-        if max_d < tol { // discard all points in between
+        if max_d <= tol { // discard all points in between
             for i in start +1 .. end {
                 delete_x.push(self.points[i].x);
             }
@@ -143,8 +145,20 @@ where
         let s = Self::tuple_to_f32(&self.points[start]);
         let p = Self::tuple_to_f32(&self.points[i]);
         let s_minus_p = (p.0 - s.0, p.1 - s.1);
-        return (s_minus_p.0 * n.0 + s_minus_p.1 * n.1) / (n.0 * n.0 + n.1 * n.1).sqrt();       
+        return ((s_minus_p.0 * n.0 + s_minus_p.1 * n.1) / (n.0 * n.0 + n.1 * n.1).sqrt()).abs();       
     }
+
+    pub fn get_values_as_vectors(&self) -> (Vec<f32>, Vec<f32>) {
+        let mut x : Vec<f32> = Vec::new();
+        let mut y : Vec<f32> = Vec::new();
+
+        for p in &self.points {
+            x.push(p.x.make_into_f32());
+            y.push(p.y.make_into_f32());
+        }
+        
+        return (x,y);
+    } 
 }
 
 impl<X, Y> Curve for IrregularDynamicCurve<X, Y>
@@ -186,6 +200,7 @@ mod tests {
     use crate::irregular_dynamic::{IrregularDynamicCurve, Tup};
     use crate::{Curve};
     use assert_approx_eq::assert_approx_eq;
+    use gnuplot::{Figure, Caption, Color};
 
     #[test]
     fn test_irregular() {
@@ -211,6 +226,7 @@ mod tests {
 
         // Test x equal to the actual points
         assert_approx_eq!(c.y_at_x(12.0), 0.0, epsilon);
+        assert_approx_eq!(c.y_at_x(12.5), 0.0, epsilon); // this point is completely redundant
         assert_approx_eq!(c.y_at_x(13.0), 0.0, epsilon);
         assert_approx_eq!(c.y_at_x(14.0), 0.4, epsilon);
         assert_approx_eq!(c.y_at_x(40.0), 1.0, epsilon);
@@ -236,11 +252,55 @@ mod tests {
         assert_approx_eq!(c.y_at_x(35.0), 0.9, epsilon);
         assert_approx_eq!(c.y_at_x(32.5), 0.8, epsilon);
 
-        assert_eq!(c.len(), 7);
+        let mut fg = Figure::new();
+        let axes = fg.axes2d();
+        
+        assert_eq!(c.len(), 8);
+        let c_plot = c.get_values_as_vectors();
+        axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C original"), Color("grey")]);
+
         c.simplify(0.0);
-        // This is not working yet:
-        // assert_eq!(c.len(), 7);
-        // c.simplify(0.1);
-        // assert_eq!(c.len(), 6);
+        assert_eq!(c.len(), 7); // should only remove the redundant point
+        
+        let c_plot = c.get_values_as_vectors();
+        axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C pseudo-simplified"), Color("black")]);
+
+        c.simplify(0.1);
+        assert!(c.len() < 7); // should remove at least one more point
+
+        let c_plot = c.get_values_as_vectors();
+        axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C simplified"), Color("red")]);
+
+        fg.show();
+    }
+
+    #[test]
+    fn test_many_points() {
+        let epsilon = 0.001;
+
+        let points = vec![
+            Tup { x: 0.0, y: 0.0 },
+            Tup { x: 100.0, y: 1.0 },
+        ];
+        let mut c = IrregularDynamicCurve::<f32, f32>::new(points);
+
+        let mut y = 0.0;
+        for i in 1..100 {
+            y += 0.01;
+            c.add_point(i as f32, y);
+        }
+        
+        let mut fg = Figure::new();
+        let axes = fg.axes2d();
+        
+       let c_plot = c.get_values_as_vectors();
+        axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C original"), Color("grey")]);
+
+        c.simplify(epsilon);
+        
+        let c_plot = c.get_values_as_vectors();
+        axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C simplified"), Color("red")]);
+
+        fg.show();
     }
 }
