@@ -76,7 +76,7 @@ where
         }
     }
 
-    fn add_point(&mut self, x: f32, y: f32) {
+    pub fn add_point(&mut self, x: f32, y: f32) {
         let xt = X::make_from_f32(x);
         let yt = Y::make_from_f32(y);
         for i in 0..self.points.len() {
@@ -92,6 +92,58 @@ where
                 return;
             }
         }
+    }
+
+    pub fn len(&self) -> usize {
+        return self.points.len();
+    }
+
+    pub fn simplify(&mut self, tol: f32) {
+        let mut delete_x : Vec<X> = Vec::new();
+        self.simplify_rec(tol, 0, self.len() - 1, &mut delete_x);
+        self.points.retain(|p| !delete_x.contains(&p.x));
+    }
+
+    fn simplify_rec(&mut self, tol: f32, start: usize, end: usize, delete_x: &mut Vec<X>) {
+        if end - start <= 2 { // keep all 1 or 2 points
+            return;
+        }
+        let mut max_d = 0.0;
+        let mut max_d_i = 0;
+
+        let s = Self::tuple_to_f32(&self.points[start]);
+        let e = Self::tuple_to_f32(&self.points[end]);
+
+        let n = (e.1 - s.1, s.0 - e.0); // normal vector to se, transposed and one coordinate inverted
+        for i in start+1 .. end {
+            let d = self.distance(start, end, i, n);
+            if d > max_d {
+                max_d = d;
+                max_d_i = i;
+            }
+        }
+
+        if max_d < tol { // discard all points in between
+            for i in start +1 .. end {
+                delete_x.push(self.points[i].x);
+            }
+        } else {
+            self.simplify_rec(tol, start, max_d_i, delete_x);
+            self.simplify_rec(tol, max_d_i, end, delete_x);
+        }
+    }
+
+    fn tuple_to_f32(tup : &Tup<X, Y>) -> (f32, f32) {
+        return (tup.x.make_into_f32(), tup.y.make_into_f32());
+    }
+
+    fn distance(&self, start: usize, _end: usize, i: usize, n: (f32, f32)) -> f32 {
+        // compute the distance of p to the line throug s and e, where n is a normal vector of that line.
+        // Formular adapted from https://www.mathelounge.de/521534/vektorenrechnung-abstand-zwischen-punkt-und-geraden-in-2d
+        let s = Self::tuple_to_f32(&self.points[start]);
+        let p = Self::tuple_to_f32(&self.points[i]);
+        let s_minus_p = (p.0 - s.0, p.1 - s.1);
+        return (s_minus_p.0 * n.0 + s_minus_p.1 * n.1) / (n.0 * n.0 + n.1 * n.1).sqrt();       
     }
 }
 
@@ -183,5 +235,12 @@ mod tests {
         c.add_point(35.0, 0.9);
         assert_approx_eq!(c.y_at_x(35.0), 0.9, epsilon);
         assert_approx_eq!(c.y_at_x(32.5), 0.8, epsilon);
+
+        assert_eq!(c.len(), 7);
+        c.simplify(0.0);
+        // This is not working yet:
+        // assert_eq!(c.len(), 7);
+        // c.simplify(0.1);
+        // assert_eq!(c.len(), 6);
     }
 }
