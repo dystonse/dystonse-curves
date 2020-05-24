@@ -1,5 +1,6 @@
 use crate::conversion::LikeANumber;
 use crate::{Curve, TypedCurve};
+use gnuplot::{Figure, Caption, Color};
 
 /**
  * A curve that has a dynamic length and data points at regular distances.
@@ -28,6 +29,29 @@ where X: LikeANumber, Y: LikeANumber
         return Self{
             n,s,x0,y
         };
+    }
+
+    // generates a graph of this curve and shows it in a gnuplot window
+    pub fn plot_curve_with_gnuplot(&self) {
+        let mut x = Vec::<f32>::new();
+        for i in 0..self.n {
+            x.push(self.x0.make_into_f32()+(i as f32)*self.s.make_into_f32());
+        }
+        let y: Vec<f32> = self.y.iter().map(|yi| yi.make_into_f32()).collect();
+        let mut fg = Figure::new();
+        fg.axes2d()
+        .lines_points(&x, &y, &[Caption("A line"), Color("black")]);
+        fg.show();
+    }
+
+    // getter for x and y values as vectors, to be used e.g. for plotting multiple curves
+    pub fn get_values_as_vectors(&self) -> (Vec<f32>, Vec<f32>){
+        let mut x = Vec::<f32>::new();
+        for i in 0..self.n {
+            x.push(self.x0.make_into_f32()+(i as f32)*self.s.make_into_f32());
+        }
+        let y: Vec<f32> = self.y.iter().map(|yi| yi.make_into_f32()).collect();
+        return (x, y);
     }
 }
 

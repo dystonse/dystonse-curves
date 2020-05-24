@@ -1,6 +1,6 @@
 mod conversion;
-mod regular_dynamic;
-mod irregular_dynamic;
+pub mod regular_dynamic;
+pub mod irregular_dynamic;
 
 /**
  * Trait to access the curve's values using f32 as type for X 
