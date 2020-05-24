@@ -1,4 +1,5 @@
 use dystonse_curves::regular_dynamic::RegularDynamicCurve;
+use dystonse_curves::irregular_dynamic::*;
 use dystonse_curves::Curve;
 use gnuplot::{Figure};
     
@@ -44,12 +45,25 @@ fn test_multi_curve() {
         vec!{0.1, 0.39, 0.45, 0.7, 1.0}
     );
 
-    let v = vec!{c, d, e};
+    /*
+    let f = IrregularDynamicCurve::<f32, f32>::new(
+            vec![
+                Tup { x: 10.0, y: 0.15},
+                Tup { x: 12.0, y: 0.2},
+                Tup { x: 17.0, y: 0.3},
+                Tup { x: 25.0, y: 0.6},
+            ]
+    );
+    */
+    //does not work because Tup is private
+
+    //let v: Vec<& dyn Curve> = vec!{&c, &d, &e, &f}; //does not work because of mismatched types
+    let v = vec!{&c, &d, &e};
 
     multi_curve_plot(v);
 }
 
-fn multi_curve_plot(curves: Vec<RegularDynamicCurve<f32, f32>>) {
+fn multi_curve_plot<T: Curve>(curves: Vec<&T>) {
     let mut fg = Figure::new();
     let mut axes = fg.axes2d();
     for c in curves {
