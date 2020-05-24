@@ -105,7 +105,6 @@ where
     }
 
     fn simplify_rec(&mut self, tol: f32, start: usize, end: usize, delete_x: &mut Vec<X>) {
-        println!("Simplify from {} to {}…", start, end);
         if end - start <= 2 { // keep all 1 or 2 points
             return;
         }
@@ -118,7 +117,6 @@ where
         let n = (e.1 - s.1, s.0 - e.0); // normal vector to se, transposed and one coordinate inverted
         for i in start+1 .. end {
             let d = self.distance(start, end, i, n);
-            println!("  Point #{} at x {} has distance {}.", i, self.points[i].x.make_into_f32(), d);
             if d > max_d {
                 max_d = d;
                 max_d_i = i;
@@ -202,6 +200,11 @@ mod tests {
     use assert_approx_eq::assert_approx_eq;
     use gnuplot::{Figure, Caption, Color};
 
+    extern crate rand;
+
+    use rand::Rng;
+
+
     #[test]
     fn test_irregular() {
         let epsilon = 0.0001;
@@ -226,7 +229,6 @@ mod tests {
 
         // Test x equal to the actual points
         assert_approx_eq!(c.y_at_x(12.0), 0.0, epsilon);
-        assert_approx_eq!(c.y_at_x(12.5), 0.0, epsilon); // this point is completely redundant
         assert_approx_eq!(c.y_at_x(13.0), 0.0, epsilon);
         assert_approx_eq!(c.y_at_x(14.0), 0.4, epsilon);
         assert_approx_eq!(c.y_at_x(40.0), 1.0, epsilon);
@@ -261,6 +263,7 @@ mod tests {
 
         c.simplify(0.0);
         assert_eq!(c.len(), 7); // should only remove the redundant point
+        // TODO if the curve begins with multuple 0.0 values or ends with mutluple 0.1 
         
         let c_plot = c.get_values_as_vectors();
         axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C pseudo-simplified"), Color("black")]);
@@ -284,9 +287,11 @@ mod tests {
         ];
         let mut c = IrregularDynamicCurve::<f32, f32>::new(points);
 
+        let mut rng = rand::thread_rng();
+
         let mut y = 0.0;
         for i in 1..100 {
-            y += 0.01;
+            y += rng.gen_range(0.0, 0.018);
             c.add_point(i as f32, y);
         }
         
@@ -296,10 +301,17 @@ mod tests {
        let c_plot = c.get_values_as_vectors();
         axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C original"), Color("grey")]);
 
-        c.simplify(epsilon);
+        c.simplify(0.01);
         
         let c_plot = c.get_values_as_vectors();
         axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C simplified"), Color("red")]);
+
+        c.simplify(0.01);
+        c.simplify(0.01);
+        c.simplify(0.01);
+        
+        let c_plot = c.get_values_as_vectors();
+        axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C over-simplified"), Color("green")]);
 
         fg.show();
     }
