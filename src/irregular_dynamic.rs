@@ -1,7 +1,11 @@
 use crate::conversion::LikeANumber;
 use crate::{Curve, TypedCurve};
+use std::fmt::Debug;
 
-pub struct Tup<X, Y> {
+#[derive(Debug)]
+pub struct Tup<X, Y> 
+where X: Debug, Y: Debug
+{
     x: X,
     y: Y,
 }
@@ -54,8 +58,40 @@ where
         }
     }
 
-    pub fn new(points: Vec<Tup<X, Y>>) -> Self {
-        return IrregularDynamicCurve { points };
+    pub fn new(mut points: Vec<Tup<X, Y>>) -> Self {
+        points.sort_by(|p1, p2| p1.x.make_into_f32().partial_cmp(&p2.x.make_into_f32()).unwrap());
+        let value = IrregularDynamicCurve { points };
+        value.check();
+        return value;
+    }
+
+    fn check(&self) {
+        assert_eq!(self.points.first().unwrap().y.make_into_f32(), 0.0, "First point does not define y = 0.");
+        assert_eq!(self.points.last().unwrap().y.make_into_f32(), 1.0, "Last point does not define y = 1.");
+        for i in 0..self.points.len() - 1 {
+            let l = &self.points[i];
+            let r = &self.points[i + 1];
+            assert!(l.x < r.x, "Unsorted x values or duplicate x value.");
+            assert!(l.y <= r.y, "Y does not increase montonously for increasing x.");
+        }
+    }
+
+    fn add_point(&mut self, x: f32, y: f32) {
+        let xt = X::make_from_f32(x);
+        let yt = Y::make_from_f32(y);
+        for i in 0..self.points.len() {
+            if self.points[i].x == xt {
+                panic!("Duplicate x value: {}", x);
+            }
+
+            if xt > self.points[i].x && xt < self.points[i + 1].x {
+                if yt < self.points[i].y || yt > self.points[i + 1].y {
+                    panic!("New point {},{} breaks monotony.", x, y);
+                }
+                self.points.insert(i + 1, Tup {x: xt, y: yt});
+                return;
+            }
+        }
     }
 }
 
@@ -105,13 +141,13 @@ mod tests {
 
         let points = vec![
             Tup { x: 12.0, y: 0.0 },
-            Tup { x: 13.0, y: 0.0 },
             Tup { x: 14.0, y: 0.4 },
             Tup { x: 20.0, y: 0.4 },
             Tup { x: 30.0, y: 0.7 },
+            Tup { x: 13.0, y: 0.0 }, // This point is out-of-order within the Vec, but in-order regaring x and y
             Tup { x: 40.0, y: 1.0 },
         ];
-        let c = IrregularDynamicCurve::<f32, f32>::new(points);
+        let mut c = IrregularDynamicCurve::<f32, f32>::new(points);
 
         // Test x bounds
         assert_eq!(c.min_x(), 12.0);
@@ -143,5 +179,9 @@ mod tests {
         assert_approx_eq!(c.x_at_y(0.7), 30.0, epsilon);
         
         assert_approx_eq!(c.x_at_y(0.2), 13.5, epsilon);
+
+        c.add_point(35.0, 0.9);
+        assert_approx_eq!(c.y_at_x(35.0), 0.9, epsilon);
+        assert_approx_eq!(c.y_at_x(32.5), 0.8, epsilon);
     }
 }

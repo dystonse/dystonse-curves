@@ -3,6 +3,7 @@ use fixed::traits::{LossyFrom};
 use half::prelude::*;
 use std::ops::{Add, Sub, Mul, Div};
 use std::cmp::{PartialOrd};
+use std::fmt::Debug;
 
 pub trait LikeANumber: 
     ConvertF32 + 
@@ -11,7 +12,8 @@ pub trait LikeANumber:
     Add<Self, Output = Self> + 
     Div<Self, Output = Self> + 
     Mul<Self, Output = Self> + 
-    PartialOrd
+    PartialOrd +
+    Debug
     {}
 
 impl LikeANumber for f32 {}
