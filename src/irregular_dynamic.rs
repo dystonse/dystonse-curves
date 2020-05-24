@@ -146,17 +146,6 @@ where
         return ((s_minus_p.0 * n.0 + s_minus_p.1 * n.1) / (n.0 * n.0 + n.1 * n.1).sqrt()).abs();       
     }
 
-    pub fn get_values_as_vectors(&self) -> (Vec<f32>, Vec<f32>) {
-        let mut x : Vec<f32> = Vec::new();
-        let mut y : Vec<f32> = Vec::new();
-
-        for p in &self.points {
-            x.push(p.x.make_into_f32());
-            y.push(p.y.make_into_f32());
-        }
-        
-        return (x,y);
-    } 
 }
 
 impl<X, Y> Curve for IrregularDynamicCurve<X, Y>
@@ -191,6 +180,19 @@ where
         }
         return self.binary_search_by_y(y, 0, self.points.len());
     }
+
+
+    fn get_values_as_vectors(&self) -> (Vec<f32>, Vec<f32>) {
+        let mut x : Vec<f32> = Vec::new();
+        let mut y : Vec<f32> = Vec::new();
+
+        for p in &self.points {
+            x.push(p.x.make_into_f32());
+            y.push(p.y.make_into_f32());
+        }
+        
+        return (x,y);
+    } 
 }
 
 #[cfg(test)]

@@ -12,6 +12,7 @@ pub trait Curve
     fn max_x(&self) -> f32;
     fn y_at_x(&self, x: f32) -> f32;
     fn x_at_y(&self, y: f32) -> f32;
+    fn get_values_as_vectors(&self) -> (Vec<f32>, Vec<f32>);
 }
 
 /**

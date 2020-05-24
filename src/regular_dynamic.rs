@@ -44,15 +44,6 @@ where X: LikeANumber, Y: LikeANumber
         fg.show();
     }
 
-    // getter for x and y values as vectors, to be used e.g. for plotting multiple curves
-    pub fn get_values_as_vectors(&self) -> (Vec<f32>, Vec<f32>){
-        let mut x = Vec::<f32>::new();
-        for i in 0..self.n {
-            x.push(self.x0.make_into_f32()+(i as f32)*self.s.make_into_f32());
-        }
-        let y: Vec<f32> = self.y.iter().map(|yi| yi.make_into_f32()).collect();
-        return (x, y);
-    }
 }
 
 impl<X, Y> Curve for RegularDynamicCurve<X, Y>
@@ -120,6 +111,16 @@ where X: LikeANumber, Y: LikeANumber
         }
 
         panic!("Did not find y = {}", y);
+    }
+
+    // getter for x and y values as vectors, to be used e.g. for plotting multiple curves
+    fn get_values_as_vectors(&self) -> (Vec<f32>, Vec<f32>){
+        let mut x = Vec::<f32>::new();
+        for i in 0..self.n {
+            x.push(self.x0.make_into_f32()+(i as f32)*self.s.make_into_f32());
+        }
+        let y: Vec<f32> = self.y.iter().map(|yi| yi.make_into_f32()).collect();
+        return (x, y);
     }
 }
 
