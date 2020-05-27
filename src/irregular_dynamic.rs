@@ -105,7 +105,7 @@ where
     }
 
     fn simplify_rec(&mut self, tol: f32, start: usize, end: usize, delete_x: &mut Vec<X>) {
-        if end - start <= 2 { // keep all 1 or 2 points
+        if end - start < 2 { // keep all 1 or 2 points
             return;
         }
         let mut max_d = -1.0;
@@ -214,6 +214,7 @@ mod tests {
         let points = vec![
             Tup { x: 12.0, y: 0.0 },
             Tup { x: 14.0, y: 0.4 },
+            Tup { x: 16.0, y: 0.4 }, // this point is redundant
             Tup { x: 20.0, y: 0.4 },
             Tup { x: 30.0, y: 0.7 },
             Tup { x: 13.0, y: 0.0 }, // This point is out-of-order within the Vec, but in-order regaring x and y
@@ -256,33 +257,31 @@ mod tests {
         assert_approx_eq!(c.y_at_x(35.0), 0.9, epsilon);
         assert_approx_eq!(c.y_at_x(32.5), 0.8, epsilon);
 
-        let mut fg = Figure::new();
-        let axes = fg.axes2d();
+        // let mut fg = Figure::new();
+        // let axes = fg.axes2d();
         
         assert_eq!(c.len(), 8);
         let c_plot = c.get_values_as_vectors();
-        axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C original"), Color("grey")]);
+        // axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C original"), Color("grey")]);
 
         c.simplify(0.0);
         assert_eq!(c.len(), 7); // should only remove the redundant point
         // TODO if the curve begins with multuple 0.0 values or ends with mutluple 0.1 
         
         let c_plot = c.get_values_as_vectors();
-        axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C pseudo-simplified"), Color("black")]);
+        // axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C pseudo-simplified"), Color("black")]);
 
         c.simplify(0.1);
         assert!(c.len() < 7); // should remove at least one more point
 
         let c_plot = c.get_values_as_vectors();
-        axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C simplified"), Color("red")]);
+        // axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C simplified"), Color("red")]);
 
-        fg.show();
+        // fg.show();
     }
 
     #[test]
     fn test_many_points() {
-        let epsilon = 0.001;
-
         let points = vec![
             Tup { x: 0.0, y: 0.0 },
             Tup { x: 100.0, y: 1.0 },
@@ -300,7 +299,7 @@ mod tests {
         let mut fg = Figure::new();
         let axes = fg.axes2d();
         
-       let c_plot = c.get_values_as_vectors();
+        let c_plot = c.get_values_as_vectors();
         axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C original"), Color("grey")]);
 
         c.simplify(0.01);
