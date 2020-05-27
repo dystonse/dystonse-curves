@@ -7,7 +7,6 @@ use gnuplot::{Figure, Caption, Color};
  */
 pub struct RegularDynamicCurve<X, Y> 
 where X: LikeANumber, Y: LikeANumber {
-    n: usize,
     s: X,
     x0: X,
     y: Vec<Y>
@@ -16,9 +15,8 @@ where X: LikeANumber, Y: LikeANumber {
 impl<X, Y> RegularDynamicCurve<X, Y>
 where X: LikeANumber, Y: LikeANumber
 {
-    pub fn new(n: usize, s: f32, x0: f32, y: Vec<f32>) -> Self {
+    pub fn new( s: f32, x0: f32, y: Vec<f32>) -> Self {
         let value = Self{
-            n,
             s: X::make_from_f32(s),
             x0: X::make_from_f32(x0),
             y: y.iter().map(|yp| Y::make_from_f32(*yp)).collect()
@@ -27,16 +25,16 @@ where X: LikeANumber, Y: LikeANumber
         return value;
     }
 
-    pub fn typed_new(n: usize, s: X, x0: X, y: Vec<Y>) -> Self {
+    pub fn typed_new(s: X, x0: X, y: Vec<Y>) -> Self {
         return Self{
-            n,s,x0,y
+            s,x0,y
         };
     }
 
     // generates a graph of this curve and shows it in a gnuplot window
     pub fn plot_curve_with_gnuplot(&self) {
         let mut x = Vec::<f32>::new();
-        for i in 0..self.n {
+        for i in 0..self.y.len() {
             x.push(self.x0.make_into_f32()+(i as f32)*self.s.make_into_f32());
         }
         let y: Vec<f32> = self.y.iter().map(|yi| yi.make_into_f32()).collect();
@@ -66,7 +64,7 @@ where X: LikeANumber, Y: LikeANumber
 
     fn max_x(&self) -> f32
     {
-        let len = self.s.make_into_f32() * ((self.n - 1) as f32);
+        let len = self.s.make_into_f32() * ((self.y.len() - 1) as f32);
         return self.x0.make_into_f32() + len;
     }
 
@@ -75,7 +73,7 @@ where X: LikeANumber, Y: LikeANumber
             return self.y[0].make_into_f32();
         }
         if x >= self.max_x() {
-            return self.y[self.n - 1].make_into_f32();
+            return self.y[self.y.len() - 1].make_into_f32();
         }
 
         let i = (x - self.min_x()) / self.s.make_into_f32();
@@ -108,7 +106,7 @@ where X: LikeANumber, Y: LikeANumber
             return self.max_x();
         }
 
-        for i in 0..self.n {
+        for i in 0..self.y.len() {
             let v_r = self.y[i].make_into_f32();
             if v_r == y {
                 return self.min_x() + i as f32 * self.s.make_into_f32();
@@ -127,7 +125,7 @@ where X: LikeANumber, Y: LikeANumber
     // getter for x and y values as vectors, to be used e.g. for plotting multiple curves
     fn get_values_as_vectors(&self) -> (Vec<f32>, Vec<f32>){
         let mut x = Vec::<f32>::new();
-        for i in 0..self.n {
+        for i in 0..self.y.len() {
             x.push(self.x0.make_into_f32()+(i as f32)*self.s.make_into_f32());
         }
         let y: Vec<f32> = self.y.iter().map(|yi| yi.make_into_f32()).collect();
@@ -144,7 +142,7 @@ where X: LikeANumber, Y: LikeANumber
 
     fn typed_max_x(&self) -> X
     {
-        let len : X = self.s * X::make_from_f32((self.n - 1) as f32);
+        let len : X = self.s * X::make_from_f32((self.y.len() - 1) as f32);
         return self.x0 + len;
     }
 
@@ -153,7 +151,7 @@ where X: LikeANumber, Y: LikeANumber
             return self.y[0];
         }
         if x >= self.typed_max_x() {
-            return self.y[self.n - 1];
+            return self.y[self.y.len() - 1];
         }
 
         let i = X::make_into_f32(x - self.x0) / X::make_into_f32(self.s);
@@ -187,7 +185,7 @@ where X: LikeANumber, Y: LikeANumber
             return self.typed_max_x();
         }
 
-        for i in 0..self.n {
+        for i in 0..self.y.len() {
             let v_r = self.y[i].make_into_f32();
             if v_r == yf {
                 return X::make_from_f32(self.x0.make_into_f32() + i as f32 * self.s.make_into_f32());

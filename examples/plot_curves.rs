@@ -14,7 +14,6 @@ fn main() {
 fn test_plot() {
 
     let c = RegularDynamicCurve::<f32, f32>::new(
-        3,
         10.0,
         10.0,
         vec!{0.0, 0.6, 1.0}
@@ -25,21 +24,18 @@ fn test_plot() {
 
 fn test_multi_curve() {
     let c = RegularDynamicCurve::<f32, f32>::new(
-        3,
         10.0,
         10.0,
         vec!{0.0, 0.6, 1.0}
     );
 
     let d = RegularDynamicCurve::<f32, f32>::new(
-        5,
         10.0,
         10.0,
         vec!{0.0, 0.7, 0.8, 0.9, 1.0}
     );
 
     let e = RegularDynamicCurve::<f32, f32>::new(
-        5,
         5.0,
         10.0,
         vec!{0.0, 0.39, 0.45, 0.7, 1.0}

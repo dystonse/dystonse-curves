@@ -55,7 +55,6 @@ mod tests {
           T: Curve + TypedCurve<X, Y>
         {
             let c = RegularDynamicCurve::<X, Y>::new(
-                3,
                 10.0,
                 10.0,
                 vec!{0.0, 0.6, 1.0}
