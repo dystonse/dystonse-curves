@@ -17,12 +17,14 @@ impl<X, Y> RegularDynamicCurve<X, Y>
 where X: LikeANumber, Y: LikeANumber
 {
     pub fn new(n: usize, s: f32, x0: f32, y: Vec<f32>) -> Self {
-        return Self{
+        let value = Self{
             n,
             s: X::make_from_f32(s),
             x0: X::make_from_f32(x0),
             y: y.iter().map(|yp| Y::make_from_f32(*yp)).collect()
         };
+        value.check();
+        return value;
     }
 
     pub fn typed_new(n: usize, s: X, x0: X, y: Vec<Y>) -> Self {
@@ -44,6 +46,15 @@ where X: LikeANumber, Y: LikeANumber
         fg.show();
     }
 
+    fn check(&self) {
+        assert_eq!(self.y.first().unwrap().make_into_f32(), 0.0, "First point does not define y = 0.");
+        assert_eq!(self.y.last().unwrap().make_into_f32(), 1.0, "Last point does not define y = 1.");
+        for i in 0..self.y.len() - 1 {
+            let l = &self.y[i];
+            let r = &self.y[i + 1];
+            assert!(l <= r, "Y does not increase montonously for increasing x.");
+        }
+    }
 }
 
 impl<X, Y> Curve for RegularDynamicCurve<X, Y>

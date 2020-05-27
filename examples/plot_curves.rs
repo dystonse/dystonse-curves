@@ -32,17 +32,17 @@ fn test_multi_curve() {
     );
 
     let d = RegularDynamicCurve::<f32, f32>::new(
-        3,
+        5,
         10.0,
         10.0,
-        vec!{0.7, 0.8, 0.9}
+        vec!{0.0, 0.7, 0.8, 0.9, 1.0}
     );
 
     let e = RegularDynamicCurve::<f32, f32>::new(
         5,
         5.0,
         10.0,
-        vec!{0.1, 0.39, 0.45, 0.7, 1.0}
+        vec!{0.0, 0.39, 0.45, 0.7, 1.0}
     );
     
     let f = IrregularDynamicCurve::<f32, f32>::new(
