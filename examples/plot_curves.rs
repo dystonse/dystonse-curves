@@ -44,28 +44,26 @@ fn test_multi_curve() {
         10.0,
         vec!{0.1, 0.39, 0.45, 0.7, 1.0}
     );
-
-    /*
+    
     let f = IrregularDynamicCurve::<f32, f32>::new(
             vec![
+                Tup { x: 5.0, y: 0.0},
                 Tup { x: 10.0, y: 0.15},
                 Tup { x: 12.0, y: 0.2},
                 Tup { x: 17.0, y: 0.3},
                 Tup { x: 25.0, y: 0.6},
+                Tup { x: 30.0, y: 1.0},   
             ]
     );
-    */
-    //does not work because Tup is private
 
-    //let v: Vec<& dyn Curve> = vec!{&c, &d, &e, &f}; //does not work because of mismatched types
-    let v = vec!{&c, &d, &e};
+    let v : Vec<Box<dyn Curve>> = vec!{Box::new(c), Box::new(d), Box::new(e), Box::new(f)};
 
     multi_curve_plot(v);
 }
 
-fn multi_curve_plot<T: Curve>(curves: Vec<&T>) {
+fn multi_curve_plot(curves: Vec<Box<dyn Curve>>) {
     let mut fg = Figure::new();
-    let mut axes = fg.axes2d();
+    let axes = fg.axes2d();
     for c in curves {
         let vecs = c.get_values_as_vectors();
         let x = vecs.0;
@@ -73,5 +71,4 @@ fn multi_curve_plot<T: Curve>(curves: Vec<&T>) {
         axes.lines_points(&x, &y, &[]);
     }
     fg.show();
-
 }

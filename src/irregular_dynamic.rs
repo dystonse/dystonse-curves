@@ -6,8 +6,8 @@ use std::fmt::Debug;
 pub struct Tup<X, Y> 
 where X: Debug, Y: Debug
 {
-    x: X,
-    y: Y,
+    pub x: X,
+    pub y: Y,
 }
 
 /**
