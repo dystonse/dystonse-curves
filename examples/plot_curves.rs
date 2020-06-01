@@ -1,6 +1,6 @@
 use dystonse_curves::regular_dynamic::RegularDynamicCurve;
 use dystonse_curves::irregular_dynamic::*;
-use dystonse_curves::Curve;
+use dystonse_curves::{Curve, weighted_average};
 use gnuplot::{Figure};
     
 fn main() {
@@ -52,7 +52,17 @@ fn test_multi_curve() {
             ]
     );
 
-    let v : Vec<Box<dyn Curve>> = vec!{Box::new(c), Box::new(d), Box::new(e), Box::new(f)};
+    let df = weighted_average(&d, 0.5, &f, 0.5);
+    let ce = weighted_average(&c, 0.9, &e, 0.1);
+
+    let v : Vec<Box<dyn Curve>> = vec!{
+        Box::new(d), 
+        Box::new(f), 
+        Box::new(df), 
+        Box::new(c), 
+        Box::new(e), 
+        Box::new(ce)
+    };
 
     multi_curve_plot(v);
 }

@@ -131,6 +131,18 @@ where X: LikeANumber, Y: LikeANumber
         let y: Vec<f32> = self.y.iter().map(|yi| yi.make_into_f32()).collect();
         return (x, y);
     }
+
+    fn get_x_values(&self) -> Vec<f32> {
+        let mut vec: Vec<f32> = Vec::with_capacity(self.y.len());
+        let x0 = self.x0.make_into_f32();
+        let s = self.s.make_into_f32();
+        for i in 0..self.y.len() {
+            vec.push(x0 + s * i as f32);
+        }
+        // TODO maybe use ranges like this: (0..10).step(3);
+        // but is this actually efficient, and does it work for floats?
+        return vec;
+    }
 }
 
 impl<X, Y> TypedCurve<X, Y> for RegularDynamicCurve<X, Y>

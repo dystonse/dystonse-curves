@@ -193,6 +193,10 @@ where
         
         return (x,y);
     } 
+
+    fn get_x_values(&self) -> Vec<f32> {
+        return self.points.iter().map(|p| p.x.make_into_f32()).collect();
+    }
 }
 
 #[cfg(test)]

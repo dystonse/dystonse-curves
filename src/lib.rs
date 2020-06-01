@@ -2,6 +2,9 @@ mod conversion;
 pub mod regular_dynamic;
 pub mod irregular_dynamic;
 
+use irregular_dynamic::{IrregularDynamicCurve, Tup};
+use itertools::Itertools;
+
 /**
  * Trait to access the curve's values using f32 as type for X 
  * and Y, irrespective of the types used internally.
@@ -13,6 +16,7 @@ pub trait Curve
     fn y_at_x(&self, x: f32) -> f32;
     fn x_at_y(&self, y: f32) -> f32;
     fn get_values_as_vectors(&self) -> (Vec<f32>, Vec<f32>);
+    fn get_x_values(&self) -> Vec<f32>; // TODO return iterator instead of Vec
 }
 
 /**
@@ -27,6 +31,25 @@ pub trait TypedCurve<X, Y>
     fn typed_x_at_y(&self, y: Y) -> X;
 }
 
+pub fn weighted_average(c1: &dyn Curve, w1: f32, c2: &dyn Curve, w2: f32) -> IrregularDynamicCurve<f32, f32> {
+    //let min_x = f32::min(c1.min_x(), c2.min_x());
+    //let max_x = f32::max(c1.max_x(), c2.max_x());
+    
+    let c1_x = c1.get_x_values();
+    let c2_x = c2.get_x_values();
+    let x_values = c1_x.iter().merge(c2_x.iter());
+    let points = x_values.dedup().map(|x| {
+        let y1 = c1.y_at_x(*x);
+        let y2 = c2.y_at_x(*x);
+        Tup {x: *x, y: y1 * w1 + y2 * w2} 
+    }).collect();
+
+    let mut ret = IrregularDynamicCurve::<f32, f32>::new(points);
+
+    ret.simplify(0.0);
+
+    return ret;
+}
 
 // TODO Move tests into own file?
 // TODO Test multiple consecutive points with the same value
