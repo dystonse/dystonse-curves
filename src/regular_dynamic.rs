@@ -41,7 +41,10 @@ where X: LikeANumber, Y: LikeANumber
         let mut fg = Figure::new();
         fg.axes2d()
         .lines_points(&x, &y, &[Caption("A line"), Color("black")]);
-        fg.show();
+        match fg.show() {
+            Ok(_) => {},
+            Err(e) => {println!("Error: {}", e);}
+        }
     }
 
     fn check(&self) {

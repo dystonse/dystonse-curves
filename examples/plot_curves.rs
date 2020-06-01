@@ -97,5 +97,8 @@ fn multi_curve_plot(curves: Vec<Box<&dyn Curve>>) {
         let y = vecs.1;
         axes.lines_points(&x, &y, &[]);
     }
-    fg.show();
+    match fg.show() {
+        Ok(_) => {},
+        Err(e) => {println!("Error: {}", e);}
+    }
 }

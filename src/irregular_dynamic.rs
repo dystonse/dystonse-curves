@@ -1,5 +1,5 @@
 use crate::conversion::LikeANumber;
-use crate::{Curve, TypedCurve};
+use crate::{Curve};
 use std::fmt::Debug;
 
 #[derive(Debug)]
@@ -265,20 +265,20 @@ mod tests {
         // let axes = fg.axes2d();
         
         assert_eq!(c.len(), 8);
-        let c_plot = c.get_values_as_vectors();
+        //let c_plot = c.get_values_as_vectors();
         // axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C original"), Color("grey")]);
 
         c.simplify(0.0);
         assert_eq!(c.len(), 7); // should only remove the redundant point
         // TODO if the curve begins with multuple 0.0 values or ends with mutluple 0.1 
         
-        let c_plot = c.get_values_as_vectors();
+        //let c_plot = c.get_values_as_vectors();
         // axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C pseudo-simplified"), Color("black")]);
 
         c.simplify(0.1);
         assert!(c.len() < 7); // should remove at least one more point
 
-        let c_plot = c.get_values_as_vectors();
+        //let c_plot = c.get_values_as_vectors();
         // axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C simplified"), Color("red")]);
 
         // fg.show();
@@ -318,6 +318,9 @@ mod tests {
         let c_plot = c.get_values_as_vectors();
         axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C over-simplified"), Color("green")]);
 
-        fg.show();
+        match fg.show() {
+            Ok(_) => {},
+            Err(e) => {println!("Error: {}", e);}
+        }
     }
 }
