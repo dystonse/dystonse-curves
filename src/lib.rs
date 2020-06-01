@@ -31,21 +31,32 @@ pub trait TypedCurve<X, Y>
     fn typed_x_at_y(&self, y: Y) -> X;
 }
 
-pub fn weighted_average(c1: &dyn Curve, w1: f32, c2: &dyn Curve, w2: f32) -> IrregularDynamicCurve<f32, f32> {
-    //let min_x = f32::min(c1.min_x(), c2.min_x());
-    //let max_x = f32::max(c1.max_x(), c2.max_x());
+// calculate a weighted average between several curves
+pub fn weighted_average(curves: Vec<Box<&dyn Curve>>, weights: Vec<f32>) -> IrregularDynamicCurve<f32, f32> {
     
-    let c1_x = c1.get_x_values();
-    let c2_x = c2.get_x_values();
-    let x_values = c1_x.iter().merge(c2_x.iter());
-    let points = x_values.dedup().map(|x| {
-        let y1 = c1.y_at_x(*x);
-        let y2 = c2.y_at_x(*x);
-        Tup {x: *x, y: y1 * w1 + y2 * w2} 
+    // make sure the number of weights and curves match:
+    assert_eq!(curves.len(), weights.len(), "invalid arguments: number of curves and weights must be the same.");
+    
+    // correction factor to make sure the weights will add up to 1.0:
+    let f = 1.0 / weights.iter().sum::<f32>();
+
+    // gather x values from all curves:
+    let x_values = curves.iter().map(|c| c.get_x_values()).kmerge().dedup();
+
+    // make a vector of (curve, weight)-tuples: 
+    let zipped : Vec<_> = curves.iter().zip(weights.iter()).collect();
+
+    // this is where the actual interpolation happens:
+    let points = x_values.map(|x| {
+        let mut y = 0.0;
+        for (c, w) in zipped.iter() {
+            y += c.y_at_x(x) * **w;
+        }
+        Tup {x, y: y * f}
     }).collect();
 
+    // make a curve from all the newly calculated points, throwing away unnecessary ones:
     let mut ret = IrregularDynamicCurve::<f32, f32>::new(points);
-
     ret.simplify(0.0);
 
     return ret;

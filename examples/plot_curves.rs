@@ -4,10 +4,10 @@ use dystonse_curves::{Curve, weighted_average};
 use gnuplot::{Figure};
     
 fn main() {
-    //comment in whatever you want to test.
+    //comment out whatever you don't want to test.
 
-    //test_plot(); //simple plot with one curve
-    //test_multi_curve(); //three curves in one plot
+    test_plot(); //simple plot with one curve
+    test_multi_curve(); //three curves in one plot
     test_weighted_average(); //two curves and a weighted average between them
 }
 
@@ -48,10 +48,10 @@ fn test_multi_curve() {
             ]
     );
 
-    let v : Vec<Box<dyn Curve>> = vec!{
-        Box::new(f), 
-        Box::new(c), 
-        Box::new(e), 
+    let v : Vec<Box<&dyn Curve>> = vec!{
+        Box::new(&f), 
+        Box::new(&c), 
+        Box::new(&e), 
     };
 
     multi_curve_plot(v);
@@ -77,22 +77,18 @@ fn test_weighted_average() {
             ]
     );
 
-    let df = weighted_average(&d, 0.7, &f, 0.3);
-    //let ce = weighted_average(&c, 0.9, &e, 0.1);
+    let df = weighted_average(vec!{Box::new(&d),Box::new(&f)}, vec!{0.7, 0.3});
 
-    let v : Vec<Box<dyn Curve>> = vec!{
-        Box::new(d), 
-        Box::new(f), 
-        Box::new(df), 
-        //Box::new(c), 
-        //Box::new(e), 
-        //Box::new(ce)
+    let v : Vec<Box<&dyn Curve>> = vec!{
+        Box::new(&d), 
+        Box::new(&f), 
+        Box::new(&df), 
     };
 
     multi_curve_plot(v);
 }
 
-fn multi_curve_plot(curves: Vec<Box<dyn Curve>>) {
+fn multi_curve_plot(curves: Vec<Box<&dyn Curve>>) {
     let mut fg = Figure::new();
     let axes = fg.axes2d();
     for c in curves {
