@@ -26,12 +26,12 @@ where
     X: LikeANumber,
     Y: LikeANumber,
 {
-    fn binary_search_by_x(&self, x: f32, start: usize, end: usize) -> f32 {
+    fn binary_search_by_x(&self, x: f32, start: usize, end: usize) -> (usize, f32) {
         if start + 1 == end {
             let l = &self.points[start];
             let r = &self.points[end];
             let a = (x - l.x.make_into_f32()) / (r.x.make_into_f32() - l.x.make_into_f32());
-            return l.y.make_into_f32() * (1.0 - a) + r.y.make_into_f32() * a;
+            return (start, l.y.make_into_f32() * (1.0 - a) + r.y.make_into_f32() * a);
         } else {
             let mid = (start + end) / 2;
             if x < self.points[mid].x.make_into_f32() {
@@ -42,12 +42,12 @@ where
         }
     }
 
-    fn binary_search_by_y(&self, y: f32, start: usize, end: usize) -> f32 {
+    fn binary_search_by_y(&self, y: f32, start: usize, end: usize) -> (usize, f32) {
         if start + 1 == end {
             let l = &self.points[start];
             let r = &self.points[end];
             let a = (y - l.y.make_into_f32()) / (r.y.make_into_f32() - l.y.make_into_f32());
-            return l.x.make_into_f32() * (1.0 - a) + r.x.make_into_f32() * a;
+            return (start, l.x.make_into_f32() * (1.0 - a) + r.x.make_into_f32() * a);
         } else {
             let mid = (start + end) / 2;
             if y < self.points[mid].y.make_into_f32() {
@@ -56,6 +56,28 @@ where
                 return self.binary_search_by_y(y, mid, end);
             }
         }
+    }
+
+    pub fn index_at_x(&self, x: f32) -> usize {
+        if x <= self.min_x() {
+            return 0;
+        }
+        if x >= self.max_x() {
+            return self.points.len() - 1;
+        }
+        let (i, _y) = self.binary_search_by_x(x, 0, self.points.len());
+        return i;
+    }
+
+    pub fn index_at_y(&self, y: f32) -> usize {
+        if y <= 0.0 {
+            return 0;
+        }
+        if y >= 1.0 {
+            return self.points.len() - 1;
+        }
+        let (i, _x) = self.binary_search_by_y(y, 0, self.points.len());
+        return i;
     }
 
     pub fn new(mut points: Vec<Tup<X, Y>>) -> Self {
@@ -168,7 +190,8 @@ where
         if x >= self.max_x() {
             return 1.0;
         }
-        return self.binary_search_by_x(x, 0, self.points.len());
+        let (_i, y) = self.binary_search_by_x(x, 0, self.points.len());
+        return y;
     }
 
     fn x_at_y(&self, y: f32) -> f32 {
@@ -178,7 +201,8 @@ where
         if y == 1.0 {
             return self.max_x();
         }
-        return self.binary_search_by_y(y, 0, self.points.len());
+        let (_i, x) =  self.binary_search_by_y(y, 0, self.points.len());
+        return x;
     }
 
 
