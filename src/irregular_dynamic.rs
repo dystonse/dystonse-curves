@@ -65,7 +65,7 @@ where
         if x >= self.max_x() {
             return self.points.len() - 1;
         }
-        let (i, _y) = self.binary_search_by_x(x, 0, self.points.len());
+        let (i, _y) = self.binary_search_by_x(x, 0, self.points.len() - 1);
         return i;
     }
 
@@ -76,7 +76,7 @@ where
         if y >= 1.0 {
             return self.points.len() - 1;
         }
-        let (i, _x) = self.binary_search_by_y(y, 0, self.points.len());
+        let (i, _x) = self.binary_search_by_y(y, 0, self.points.len() - 1);
         return i;
     }
 
@@ -190,7 +190,7 @@ where
         if x >= self.max_x() {
             return 1.0;
         }
-        let (_i, y) = self.binary_search_by_x(x, 0, self.points.len());
+        let (_i, y) = self.binary_search_by_x(x, 0, self.points.len() - 1);
         return y;
     }
 
@@ -201,7 +201,7 @@ where
         if y == 1.0 {
             return self.max_x();
         }
-        let (_i, x) =  self.binary_search_by_y(y, 0, self.points.len());
+        let (_i, x) =  self.binary_search_by_y(y, 0, self.points.len() - 1);
         return x;
     }
 
