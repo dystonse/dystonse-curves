@@ -96,6 +96,7 @@ mod tests {
     use crate::conversion::LikeANumber;
     use assert_approx_eq::assert_approx_eq;
     use fixed::types::{U1F7, U1F15};
+    // use gnuplot::{Figure, Caption, Color};
     // use half::prelude::*;
 
     #[test]
@@ -197,13 +198,13 @@ mod tests {
         let c1 = RegularDynamicCurve::<f32, f32>::new(
             10.0,
             10.0,
-            vec!{0.0, 0.6, 0.6, 0.6, 0.7, 1.0}
+            vec!{0.0, 0.2, 0.3, 0.3, 0.7, 1.0}
         );
 
         let c2 = RegularDynamicCurve::<f32, f32>::new(
             5.0,
-            3.0,
-            vec!{0.0, 0.2, 0.6, 0.7, 0.7, 1.0}
+            12.0,
+            vec!{0.0, 0.05, 0.1, 0.4, 0.7, 1.0}
         );
 
         let c3 = weighted_average(vec!{Box::new(&c1), Box::new(&c2)}, vec!{0.5, 0.5});
@@ -226,5 +227,18 @@ mod tests {
         assert!(distance(&c3, &c1) > 0.0);
         assert!(distance(&c3, &c2) > 0.0);
         assert!(distance(&c2, &c3) > 0.0);
+
+        // Visualization of the test curves:
+        // let mut fg = Figure::new();
+        // let axes = fg.axes2d();
+        
+        // let c_plot = c1.get_values_as_vectors();
+        // axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C1")]);
+        // let c_plot = c2.get_values_as_vectors();
+        // axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C2")]);
+        // let c_plot = c3.get_values_as_vectors();
+        // axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C3")]);
+
+        // fg.show();
     }
 }
