@@ -62,12 +62,36 @@ pub fn weighted_average(curves: Vec<Box<&dyn Curve>>, weights: Vec<f32>) -> Irre
     return ret;
 }
 
+/// Compute the distance if two curves, defindes as the area between the two
+pub fn distance(a: &impl Curve, b: &impl Curve) -> f32 {
+    // gather x values from all curves:
+    let x_a = a.get_x_values();
+    let x_b = b.get_x_values();
+    let x_values = x_a.iter().merge(x_b.iter()).dedup();
+
+    // for each relevant x, get the difference of the ys of both curves
+    x_values.map(|x| {
+        let y_a = a.y_at_x(*x);
+        let y_b = b.y_at_x(*x);
+        (x, y_a - y_b)
+    }).tuple_windows().map(|((x1, dy1), (x2, dy2))| { // 
+        let h = x2 - x1;
+        let a = dy1.abs();
+        let c = dy2.abs();
+        if dy1 * dy2 >= 0.0 { // same sings, true trapezoid or triangle
+            (a + c) * h * 0.5
+        } else { // different signs, self-intersecting trapezoid
+            h * 0.5 * (a*a + c*c) / (a + c)
+        }
+    }).sum()
+}
+
 // TODO Move tests into own file?
 // TODO Test multiple consecutive points with the same value
 // TODO split test functions
 #[cfg(test)]
 mod tests {
-    use crate::{Curve, TypedCurve};
+    use crate::{Curve, TypedCurve, distance, weighted_average};
     use crate::regular_dynamic::RegularDynamicCurve;
     use crate::conversion::LikeANumber;
     use assert_approx_eq::assert_approx_eq;
@@ -166,5 +190,41 @@ mod tests {
             assert_approx_eq!(c.typed_x_at_y(Y::make_from_f32(0.15)).make_into_f32(), 12.5, epsilon);
             assert_approx_eq!(c.typed_x_at_y(Y::make_from_f32(0.45)).make_into_f32(), 17.5, epsilon);
         }
+    }
+
+    #[test]
+    fn test_distance() {
+        let c1 = RegularDynamicCurve::<f32, f32>::new(
+            10.0,
+            10.0,
+            vec!{0.0, 0.6, 0.6, 0.6, 0.7, 1.0}
+        );
+
+        let c2 = RegularDynamicCurve::<f32, f32>::new(
+            5.0,
+            3.0,
+            vec!{0.0, 0.2, 0.6, 0.7, 0.7, 1.0}
+        );
+
+        let c3 = weighted_average(vec!{Box::new(&c1), Box::new(&c2)}, vec!{0.5, 0.5});
+
+        assert_approx_eq!(distance(&c1, &c1), 0.0);
+        assert_ne!(distance(&c1, &c2), 0.0);
+        assert_approx_eq!(distance(&c1, &c2), distance(&c2, &c1));
+
+        // c3 is exactly between c1 and c2, so both should have the same distance from c3
+        assert_approx_eq!(distance(&c1, &c3), distance(&c2, &c3));
+
+        // direct distance from c1 to c2 should be the same as using the
+        // detour via c3, because c3 lies exactly in the middle of both
+        assert_approx_eq!(distance(&c1, &c2),  distance(&c1, &c3) + distance(&c2, &c3));
+
+        // all non-zero distance should be positive
+        assert!(distance(&c1, &c2) > 0.0);
+        assert!(distance(&c2, &c1) > 0.0);
+        assert!(distance(&c1, &c3) > 0.0);
+        assert!(distance(&c3, &c1) > 0.0);
+        assert!(distance(&c3, &c2) > 0.0);
+        assert!(distance(&c2, &c3) > 0.0);
     }
 }

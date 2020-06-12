@@ -159,8 +159,8 @@ where
         return (tup.x.make_into_f32(), tup.y.make_into_f32());
     }
 
+    /// Compute the distance of p to the line throug s and e, where n is a normal vector of that line.
     fn distance(&self, start: usize, _end: usize, i: usize, n: (f32, f32)) -> f32 {
-        // compute the distance of p to the line throug s and e, where n is a normal vector of that line.
         // Formular adapted from https://www.mathelounge.de/521534/vektorenrechnung-abstand-zwischen-punkt-und-geraden-in-2d
         let s = Self::tuple_to_f32(&self.points[start]);
         let p = Self::tuple_to_f32(&self.points[i]);
@@ -319,8 +319,8 @@ mod tests {
         let mut rng = rand::thread_rng();
 
         let mut y = 0.0;
-        for i in 1..100 {
-            y += rng.gen_range(0.0, 0.018);
+        for i in 1..23 {
+            y += rng.gen_range(0.0, 0.018) + (f32::sin(i as f32 / 5.0) + 1.0) / 100.0;
             c.add_point(i as f32, y);
         }
         
