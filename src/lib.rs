@@ -97,6 +97,8 @@ pub fn distance(a: &impl Curve, b: &impl Curve) -> f32 {
 mod tests {
     use crate::{Curve, TypedCurve, distance, weighted_average};
     use crate::regular_dynamic::RegularDynamicCurve;
+    use crate::irregular_dynamic::IrregularDynamicCurve;
+    use crate::irregular_dynamic::Tup;
     use crate::conversion::LikeANumber;
     use assert_approx_eq::assert_approx_eq;
     use fixed::types::{U1F7, U1F15};
@@ -247,7 +249,7 @@ mod tests {
     }
 
     #[test]
-    fn test_serde() {
+    fn test_serde_reg() {
         let c1 = RegularDynamicCurve::<f32, f32>::new(
             10.0,
             10.0,
@@ -259,11 +261,37 @@ mod tests {
 
         let deserialized: RegularDynamicCurve::<f32, f32> = serde_json::from_str(&serialized).unwrap();
         println!("deserialized = {:?}", deserialized);
+        assert!(distance(&c1, &deserialized) == 0.0);
 
         let serialized_bin = rmp_serde::to_vec(&c1).unwrap();
         println!("serialized = {:?}", serialized_bin);
 
         let deserialized_bin: RegularDynamicCurve::<f32, f32> = rmp_serde::from_read_ref(&serialized_bin).unwrap();
         println!("deserialized = {:?}", deserialized_bin);
+        assert!(distance(&c1, &deserialized_bin) == 0.0);
+    }
+
+    #[test]
+    fn test_serde_irreg() {
+        let c1 = IrregularDynamicCurve::<f32, f32>::new(
+            vec!{
+                Tup { x: 0.0, y: 0.0 },
+                Tup { x: 100.0, y: 1.0 }
+            }
+        );
+
+        let serialized = serde_json::to_string(&c1).unwrap();
+        println!("serialized = {}", serialized);
+
+        let deserialized: IrregularDynamicCurve::<f32, f32> = serde_json::from_str(&serialized).unwrap();
+        println!("deserialized = {:?}", deserialized);
+        assert!(distance(&c1, &deserialized) == 0.0);
+
+        let serialized_bin = rmp_serde::to_vec(&c1).unwrap();
+        println!("serialized = {:?}", serialized_bin);
+
+        let deserialized_bin: IrregularDynamicCurve::<f32, f32> = rmp_serde::from_read_ref(&serialized_bin).unwrap();
+        println!("deserialized = {:?}", deserialized_bin);
+        assert!(distance(&c1, &deserialized_bin) == 0.0);
     }
 }

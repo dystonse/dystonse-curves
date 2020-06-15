@@ -15,6 +15,7 @@ pub struct Tup<X, Y> where
 /**
  * A curve that has a dynamic length and data points at regular distances.
  */
+#[derive(Serialize, Deserialize, Debug)]
 pub struct IrregularDynamicCurve<X, Y>
 where
     X: LikeANumber,
