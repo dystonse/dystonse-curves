@@ -62,7 +62,7 @@ pub fn weighted_average(curves: Vec<Box<&dyn Curve>>, weights: Vec<f32>) -> Irre
     return ret;
 }
 
-/// Compute the distance if two curves, defindes as the area between the two
+/// Compute the distance if two curves, defined as the area between the two
 pub fn distance(a: &impl Curve, b: &impl Curve) -> f32 {
     // gather x values from all curves:
     let x_a = a.get_x_values();
@@ -74,7 +74,11 @@ pub fn distance(a: &impl Curve, b: &impl Curve) -> f32 {
         let y_a = a.y_at_x(*x);
         let y_b = b.y_at_x(*x);
         (x, y_a - y_b)
-    }).tuple_windows().map(|((x1, dy1), (x2, dy2))| { // 
+    }).tuple_windows().map(|((x1, dy1), (x2, dy2))| { 
+        // Consider sections of the two curves as trapezoids.
+        // The computation of the trapezoid's area and the
+        // naming of the variables follows 
+        // https://de.wikipedia.org/wiki/Trapez_(Geometrie)#%C3%9Cberschlagenes_oder_verschr%C3%A4nktes_Trapez
         let h = x2 - x1;
         let a = dy1.abs();
         let c = dy2.abs();
@@ -240,5 +244,26 @@ mod tests {
         // axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C3")]);
 
         // fg.show();
+    }
+
+    #[test]
+    fn test_serde() {
+        let c1 = RegularDynamicCurve::<f32, f32>::new(
+            10.0,
+            10.0,
+            vec!{0.0, 0.2, 0.3, 0.3, 0.7, 1.0}
+        );
+
+        let serialized = serde_json::to_string(&c1).unwrap();
+        println!("serialized = {}", serialized);
+
+        let deserialized: RegularDynamicCurve::<f32, f32> = serde_json::from_str(&serialized).unwrap();
+        println!("deserialized = {:?}", deserialized);
+
+        let serialized_bin = rmp_serde::to_vec(&c1).unwrap();
+        println!("serialized = {:?}", serialized_bin);
+
+        let deserialized_bin: RegularDynamicCurve::<f32, f32> = rmp_serde::from_read_ref(&serialized_bin).unwrap();
+        println!("deserialized = {:?}", deserialized_bin);
     }
 }

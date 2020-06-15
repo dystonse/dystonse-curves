@@ -1,10 +1,12 @@
 use crate::conversion::LikeANumber;
 use crate::{Curve};
 use std::fmt::Debug;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug)]
-pub struct Tup<X, Y> 
-where X: Debug, Y: Debug
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Tup<X, Y> where 
+    X: Debug, 
+    Y: Debug
 {
     pub x: X,
     pub y: Y,
