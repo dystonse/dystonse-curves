@@ -1,6 +1,7 @@
 mod conversion;
 pub mod regular_dynamic;
 pub mod irregular_dynamic;
+pub mod curve_set;
 
 use irregular_dynamic::{IrregularDynamicCurve, Tup};
 use itertools::Itertools;
