@@ -10,7 +10,7 @@ pub struct CurveSet<T, C> where
     T: LikeANumber,
     C: Curve
 {
-    curves: Vec<(T,C)>
+    pub curves: Vec<(T,C)>
 }
 
 impl<T, C> CurveSet<T, C> where 
@@ -23,11 +23,11 @@ impl<T, C> CurveSet<T, C> where
         };
     }
 
-    fn min_x(&self) -> f32 {
+    pub fn min_x(&self) -> f32 {
         return self.curves.first().unwrap().0.make_into_f32();
     }
 
-    fn max_x(&self) -> f32 {
+    pub fn max_x(&self) -> f32 {
         return self.curves.last().unwrap().0.make_into_f32();
     }
 
