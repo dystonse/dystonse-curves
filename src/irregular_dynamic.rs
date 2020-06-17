@@ -2,6 +2,7 @@ use crate::conversion::LikeANumber;
 use crate::{Curve};
 use std::fmt::Debug;
 use serde::{Serialize, Deserialize};
+use itertools::Itertools;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Tup<X, Y> where 
@@ -169,6 +170,30 @@ where
         let p = Self::tuple_to_f32(&self.points[i]);
         let s_minus_p = (p.0 - s.0, p.1 - s.1);
         return ((s_minus_p.0 * n.0 + s_minus_p.1 * n.1) / (n.0 * n.0 + n.1 * n.1).sqrt()).abs();       
+    }
+
+    pub fn average(curves: Vec<IrregularDynamicCurve<f32, f32>>) -> IrregularDynamicCurve<f32, f32> {
+
+        // correction factor to make the weights add up to 1.0:
+        let f = 1.0 / curves.len() as f32;
+
+        // gather x values from all curves:
+        let x_values = curves.iter().map(|c| c.get_x_values()).kmerge().dedup();
+
+        // this is where the actual interpolation happens:
+        let points = x_values.map(|x| {
+            let mut y = 0.0;
+            for c in curves.iter() {
+                y += c.y_at_x(x);
+            }
+            Tup {x, y: y * f}
+        }).collect();
+
+        // make a curve from all the newly calculated points, throwing away unnecessary ones:
+        let mut ret = IrregularDynamicCurve::<f32, f32>::new(points);
+        ret.simplify(0.0);
+
+        return ret;
     }
 
 }
