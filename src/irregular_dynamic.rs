@@ -1,5 +1,5 @@
 use crate::conversion::LikeANumber;
-use crate::{Curve};
+use crate::{Curve, EPSILON};
 use std::fmt::Debug;
 use serde::{Serialize, Deserialize};
 use itertools::Itertools;
@@ -86,6 +86,14 @@ where
 
     pub fn new(mut points: Vec<Tup<X, Y>>) -> Self {
         points.sort_by(|p1, p2| p1.x.make_into_f32().partial_cmp(&p2.x.make_into_f32()).unwrap());
+        // fix first and/or last point if they are very close to 0.0 / 1.0
+        if points[0].y.make_into_f32().abs() < EPSILON {
+            points[0].y = Y::make_from_f32(0.0);
+        }
+        let last_index = points.len() - 1;
+        if (points[last_index].y.make_into_f32() - 1.0).abs() < EPSILON {
+            points[last_index].y = Y::make_from_f32(1.0);
+        }
         let value = IrregularDynamicCurve { points };
         value.check();
         return value;

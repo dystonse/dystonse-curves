@@ -6,6 +6,8 @@ pub mod curve_set;
 use irregular_dynamic::{IrregularDynamicCurve, Tup};
 use itertools::Itertools;
 
+const EPSILON: f32 = 0.0001;
+
 /**
  * Trait to access the curve's values using f32 as type for X 
  * and Y, irrespective of the types used internally.
@@ -103,6 +105,9 @@ mod tests {
     use crate::conversion::LikeANumber;
     use assert_approx_eq::assert_approx_eq;
     use fixed::types::{U1F7, U1F15};
+    // use std::io::prelude::*;
+    // use std::fs::File;
+    // use crate::curve_set::CurveSet;
     // use gnuplot::{Figure, Caption, Color};
     // use half::prelude::*;
 
@@ -295,4 +300,31 @@ mod tests {
         println!("deserialized = {:?}", deserialized_bin);
         assert!(distance(&c1, &deserialized_bin) == 0.0);
     }
+
+    // #[test]
+    // fn test_serde_curve_set() {
+    //     let mut f = File::open("/Users/lena/src/dystonse-gtfs-data/data/curve_img/Bremer Straßenbahn AG/Linie_4/4948172540786688452/curve_0_to_18.crv").unwrap();
+    //     let mut buffer = Vec::new();
+    //     // read the whole file
+    //     f.read_to_end(&mut buffer);
+
+    //     let curve_set: CurveSet<f32, IrregularDynamicCurve::<f32, f32>> = rmp_serde::from_read_ref(&buffer).unwrap();
+        
+
+    //     // Visualization of the test curves:
+    //     let mut fg = Figure::new();
+    //     let axes = fg.axes2d();
+
+    //     for (x, curve) in &curve_set.curves {
+    //         let c_plot = curve.get_values_as_vectors();
+    //         axes.lines_points(&c_plot.0, &c_plot.1, &[Caption(&format!("Ca. {:.1}s", x)), Color("red")]);
+    //     }
+        
+    //     for i in (-72..120).step_by(10) {
+    //         let c_plot = curve_set.curve_at_x_with_continuation(i as f32).get_values_as_vectors();
+    //         axes.lines_points(&c_plot.0, &c_plot.1, &[Caption(&format!("{} von 10", i)), Color("black")]);
+    //     }
+
+    //     fg.show();
+    // }
 }
