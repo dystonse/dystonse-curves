@@ -33,7 +33,7 @@ pub trait TypedCurve<X, Y>
 }
 
 // calculate a weighted average between several curves
-pub fn weighted_average(curves: Vec<Box<&dyn Curve>>, weights: Vec<f32>) -> IrregularDynamicCurve<f32, f32> {
+pub fn weighted_average(curves: Vec<&dyn Curve>, weights: Vec<f32>) -> IrregularDynamicCurve<f32, f32> {
     
     // make sure the number of weights and curves match:
     assert_eq!(curves.len(), weights.len(), "invalid arguments: number of curves and weights must be the same.");
@@ -214,7 +214,7 @@ mod tests {
             vec!{0.0, 0.05, 0.1, 0.4, 0.7, 1.0}
         );
 
-        let c3 = weighted_average(vec!{Box::new(&c1), Box::new(&c2)}, vec!{0.5, 0.5});
+        let c3 = weighted_average(vec!{&c1, &c2}, vec!{0.5, 0.5});
 
         assert_approx_eq!(distance(&c1, &c1), 0.0);
         assert_ne!(distance(&c1, &c2), 0.0);

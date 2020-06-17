@@ -36,7 +36,7 @@ impl<T, C> CurveSet<T, C> where
             let (lx, lc) = &self.curves[start];
             let (rx, rc) = &self.curves[end];
             let a = (x - lx.make_into_f32()) / (rx.make_into_f32() - lx.make_into_f32());
-            return (start, weighted_average(vec!{Box::new(lc), Box::new(rc)}, vec!{(1.0 - a), a}));
+            return (start, weighted_average(vec!{lc, rc}, vec!{(1.0 - a), a}));
         } else {
             let mid = (start + end) / 2;
             if x < self.curves[mid].0.make_into_f32() {
@@ -61,10 +61,11 @@ impl<T, C> CurveSet<T, C> where
     /// interpolated to generate the result.
     pub fn curve_at_x_with_continuation(&self, x: f32) -> IrregularDynamicCurve<f32, f32> {
         if x <= self.min_x() {
-            return weighted_average(vec!{Box::new(&self.curves.first().unwrap().1)}, vec!{1.0});
+            let curve = &self.curves.first().unwrap().1;
+            return weighted_average(vec!{curve}, vec!{1.0});
         }
         if x >= self.max_x() {
-            return weighted_average(vec!{Box::new(&self.curves.last().unwrap().1)}, vec!{1.0});
+            return weighted_average(vec!{&self.curves.last().unwrap().1}, vec!{1.0});
         }
         return self.binary_search_by_x(x, 0, self.curves.len() - 1).1;
     }

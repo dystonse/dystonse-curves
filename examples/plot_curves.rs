@@ -77,7 +77,7 @@ fn test_weighted_average() {
             ]
     );
 
-    let df = weighted_average(vec!{Box::new(&d),Box::new(&f)}, vec!{0.7, 0.3});
+    let df = weighted_average(vec!{&d, &f}, vec!{0.7, 0.3});
 
     let v : Vec<Box<&dyn Curve>> = vec!{
         Box::new(&d), 
