@@ -1,9 +1,9 @@
 use crate::conversion::LikeANumber;
-use crate::Curve;
-use crate::weighted_average;
 use crate::irregular_dynamic::IrregularDynamicCurve;
+use crate::{Curve, weighted_average, FnResult};
 use simple_error::{SimpleError, bail};
 use serde::{Serialize, Deserialize};
+use super::tree::{TreeData, SerdeFormat, NodeData};
 
 #[derive(Serialize, Deserialize)]
 pub struct CurveSet<T, C> where 
@@ -103,5 +103,24 @@ impl<T, C> CurveSet<T, C> where
                 return;
             }
         }
+    }
+}
+
+impl<T, C> TreeData for CurveSet<T, C> where 
+T: LikeANumber,
+C: Curve + Serialize,
+CurveSet<T, C>: NodeData
+{
+    fn save_tree(&self, dir_name: &str, format: &SerdeFormat, file_levels: usize) -> FnResult<()> {
+        if file_levels == 0 {
+            self.save_to_file(dir_name, "curveset.crs", &format)?;
+        } else {
+            for (key, curve) in &self.curves {
+                let file_name = format!("curve_{}.crv", key.make_into_f32());
+                curve.save_to_file(dir_name, &file_name, &format)?;
+            }
+        }
+
+        Ok(())
     }
 }

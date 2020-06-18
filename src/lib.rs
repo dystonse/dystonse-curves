@@ -2,11 +2,15 @@ mod conversion;
 pub mod regular_dynamic;
 pub mod irregular_dynamic;
 pub mod curve_set;
+pub mod tree;
 
 use irregular_dynamic::{IrregularDynamicCurve, Tup};
 use itertools::Itertools;
+use std::error::Error;
 
 const EPSILON: f32 = 0.0001;
+
+pub type FnResult<R> = std::result::Result<R, Box<dyn Error>>;
 
 /**
  * Trait to access the curve's values using f32 as type for X 
