@@ -4,7 +4,7 @@ use std::fmt::Debug;
 use serde::{Serialize, Deserialize};
 use itertools::Itertools;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Tup<X, Y> where 
     X: Debug, 
     Y: Debug
@@ -16,7 +16,7 @@ pub struct Tup<X, Y> where
 /**
  * A curve that has a dynamic length and data points at regular distances.
  */
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct IrregularDynamicCurve<X, Y>
 where
     X: LikeANumber,

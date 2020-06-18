@@ -6,7 +6,7 @@ use serde::{Serialize, Deserialize};
 /**
  * A curve that has a dynamic length and data points at regular distances.
  */
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RegularDynamicCurve<X, Y> 
 where X: LikeANumber, Y: LikeANumber {
     s: X,
