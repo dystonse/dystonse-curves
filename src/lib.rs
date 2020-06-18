@@ -4,9 +4,13 @@ pub mod irregular_dynamic;
 pub mod curve_set;
 pub mod tree;
 
-use irregular_dynamic::{IrregularDynamicCurve, Tup};
+pub use regular_dynamic::RegularDynamicCurve;
+pub use irregular_dynamic::{IrregularDynamicCurve, Tup};
+pub use curve_set::CurveSet;
+
 use itertools::Itertools;
 use std::error::Error;
+use std::fmt::Debug;
 
 const EPSILON: f32 = 0.0001;
 
@@ -16,7 +20,7 @@ pub type FnResult<R> = std::result::Result<R, Box<dyn Error>>;
  * Trait to access the curve's values using f32 as type for X 
  * and Y, irrespective of the types used internally.
  */
-pub trait Curve
+pub trait Curve : Debug
 {
     fn min_x(&self) -> f32;
     fn max_x(&self) -> f32;
