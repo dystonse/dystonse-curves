@@ -2,6 +2,7 @@ use crate::conversion::LikeANumber;
 use crate::{Curve, TypedCurve};
 use gnuplot::{Figure, Caption, Color};
 use serde::{Serialize, Deserialize};
+use crate::tree::{LeafData, SerdeFormat};
 
 /**
  * A curve that has a dynamic length and data points at regular distances.
@@ -216,5 +217,16 @@ where X: LikeANumber, Y: LikeANumber
         }
 
         panic!("Did not find y = {}", yf);
+    }
+}
+
+impl<X, Y> LeafData for RegularDynamicCurve<X, Y> 
+where X: LikeANumber, Y: LikeANumber 
+{
+    fn get_ext(format: &SerdeFormat) -> &str {
+        match format {
+            SerdeFormat::Json => "json",
+            SerdeFormat::MessagePack => "rcrv"
+        }
     }
 }

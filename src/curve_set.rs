@@ -3,7 +3,7 @@ use crate::irregular_dynamic::IrregularDynamicCurve;
 use crate::{Curve, weighted_average, FnResult};
 use simple_error::{SimpleError, bail};
 use serde::{Serialize, Deserialize, de::DeserializeOwned};
-use super::tree::{TreeData, SerdeFormat, NodeData};
+use super::tree::{TreeData, SerdeFormat, NodeData, LeafData};
 
 #[derive(Serialize, Deserialize)]
 pub struct CurveSet<T, C> where 
@@ -110,10 +110,10 @@ impl<T, C> CurveSet<T, C> where
 
 impl<T, C> TreeData for CurveSet<T, C> where 
 T: LikeANumber,
-C: Curve + Serialize + DeserializeOwned,
+C: Curve + Serialize + DeserializeOwned + LeafData,
 CurveSet<T, C>: NodeData
 {
-    fn save_tree(&self, dir_name: &str, format: &SerdeFormat, leaves: &Vec<&str>) -> FnResult<()> {
+    fn save_tree(&self, dir_name: &str, own_name: &str, format: &SerdeFormat, leaves: &Vec<&str>) -> FnResult<()> {
         if leaves.contains(&Self::NAME) {
             self.save_to_file(dir_name, "curveset.crs", &format)?;
         } else {
@@ -126,7 +126,19 @@ CurveSet<T, C>: NodeData
         Ok(())
     }
 
-    fn load_tree(dir_name: &str, format: &SerdeFormat, leaves: &Vec<&str>) -> FnResult<Self> {
+    fn load_tree(dir_name: &str, own_name: &str, format: &SerdeFormat, leaves: &Vec<&str>) -> FnResult<Self> {
         bail!("Not yet implemented.");
+    }
+}
+
+impl<T, C> LeafData for CurveSet<T, C> where 
+T: LikeANumber,
+C: Curve + Serialize + DeserializeOwned + LeafData
+{
+    fn get_ext(format: &SerdeFormat) -> &str {
+        match format {
+            SerdeFormat::Json => "json",
+            SerdeFormat::MessagePack => "crvs"
+        }
     }
 }

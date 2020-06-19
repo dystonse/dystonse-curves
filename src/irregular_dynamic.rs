@@ -3,6 +3,7 @@ use crate::{Curve, EPSILON};
 use std::fmt::Debug;
 use serde::{Serialize, Deserialize};
 use itertools::Itertools;
+use crate::tree::{LeafData, SerdeFormat};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Tup<X, Y> where 
@@ -256,6 +257,17 @@ where
 
     fn get_x_values(&self) -> Vec<f32> {
         return self.points.iter().map(|p| p.x.make_into_f32()).collect();
+    }
+}
+
+impl<X, Y> LeafData for IrregularDynamicCurve<X, Y>
+where X: LikeANumber, Y: LikeANumber
+{
+    fn get_ext(format: &SerdeFormat) -> &str {
+        match format {
+            SerdeFormat::Json => "json",
+            SerdeFormat::MessagePack => "icrv"
+        }
     }
 }
 
