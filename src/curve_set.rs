@@ -17,6 +17,8 @@ impl<T, C> CurveSet<T, C> where
     T: LikeANumber,
     C: Curve + NodeData
 {
+    pub const NAME : &'static str = "CurveSet";
+
     pub fn new() -> Self {
         return Self {
             curves: vec!{}
@@ -111,8 +113,8 @@ T: LikeANumber,
 C: Curve + Serialize + DeserializeOwned,
 CurveSet<T, C>: NodeData
 {
-    fn save_tree(&self, dir_name: &str, format: &SerdeFormat, file_levels: usize) -> FnResult<()> {
-        if file_levels == 0 {
+    fn save_tree(&self, dir_name: &str, format: &SerdeFormat, leaves: &Vec<&str>) -> FnResult<()> {
+        if leaves.contains(&Self::NAME) {
             self.save_to_file(dir_name, "curveset.crs", &format)?;
         } else {
             for (key, curve) in &self.curves {
@@ -124,7 +126,7 @@ CurveSet<T, C>: NodeData
         Ok(())
     }
 
-    fn load_tree(dir_name: &str, format: &SerdeFormat, file_levels: usize) -> FnResult<Self> {
+    fn load_tree(dir_name: &str, format: &SerdeFormat, leaves: &Vec<&str>) -> FnResult<Self> {
         bail!("Not yet implemented.");
     }
 }

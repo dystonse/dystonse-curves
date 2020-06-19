@@ -24,8 +24,8 @@ pub trait TreeData : Sized {
     /// Save this objects and its children. If file_levels == 0, this delegates to
     /// save_to_file. Else, it creates a directory and calls save_tree for all it's
     /// non-leaf-children (with file_levels - 1) and save_to_file for all it's leaf-children.
-    fn save_tree(&self, dir_name: &str, format: &SerdeFormat, file_levels: usize) -> FnResult<()>;
-    fn load_tree(dir_name: &str, format: &SerdeFormat, file_levels: usize) -> FnResult<Self>;
+    fn save_tree(&self, dir_name: &str, format: &SerdeFormat, leaves: &Vec<&str>) -> FnResult<()>;
+    fn load_tree(dir_name: &str, format: &SerdeFormat, leaves: &Vec<&str>) -> FnResult<Self>;
 }
 
 impl<'a, T> NodeData for T
