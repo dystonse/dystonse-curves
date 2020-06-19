@@ -2,20 +2,20 @@ use crate::conversion::LikeANumber;
 use crate::irregular_dynamic::IrregularDynamicCurve;
 use crate::{Curve, weighted_average, FnResult};
 use simple_error::{SimpleError, bail};
-use serde::{Serialize, Deserialize};
+use serde::{Serialize, Deserialize, de::DeserializeOwned};
 use super::tree::{TreeData, SerdeFormat, NodeData};
 
 #[derive(Serialize, Deserialize)]
 pub struct CurveSet<T, C> where 
     T: LikeANumber,
-    C: Curve
+    C: Curve + NodeData
 {
     pub curves: Vec<(T,C)>
 }
 
 impl<T, C> CurveSet<T, C> where 
     T: LikeANumber,
-    C: Curve
+    C: Curve + NodeData
 {
     pub fn new() -> Self {
         return Self {
@@ -108,7 +108,7 @@ impl<T, C> CurveSet<T, C> where
 
 impl<T, C> TreeData for CurveSet<T, C> where 
 T: LikeANumber,
-C: Curve + Serialize,
+C: Curve + Serialize + DeserializeOwned,
 CurveSet<T, C>: NodeData
 {
     fn save_tree(&self, dir_name: &str, format: &SerdeFormat, file_levels: usize) -> FnResult<()> {
@@ -122,5 +122,9 @@ CurveSet<T, C>: NodeData
         }
 
         Ok(())
+    }
+
+    fn load_tree(dir_name: &str, format: &SerdeFormat, file_levels: usize) -> FnResult<Box<Self>> {
+        bail!("Not yet implemented.");
     }
 }
