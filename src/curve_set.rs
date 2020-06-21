@@ -115,10 +115,10 @@ CurveSet<T, C>: NodeData
 {
     fn save_tree(&self, dir_name: &str, own_name: &str, format: &SerdeFormat, leaves: &Vec<&str>) -> FnResult<()> {
         if leaves.contains(&Self::NAME) {
-            self.save_to_file(dir_name, "curveset.crs", &format)?;
+            self.save_to_file(dir_name, own_name, &format)?;
         } else {
             for (key, curve) in &self.curves {
-                let file_name = format!("curve_{}.crv", key.make_into_f32());
+                let file_name = format!("curve_{}", key.make_into_f32());
                 curve.save_to_file(dir_name, &file_name, &format)?;
             }
         }
