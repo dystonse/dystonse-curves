@@ -117,9 +117,10 @@ CurveSet<T, C>: NodeData
         if leaves.contains(&Self::NAME) {
             self.save_to_file(dir_name, own_name, &format)?;
         } else {
+            let sub_dir_name = format!("{}/{}", dir_name, own_name);
             for (key, curve) in &self.curves {
                 let file_name = format!("curve_{}", key.make_into_f32());
-                curve.save_to_file(dir_name, &file_name, &format)?;
+                curve.save_to_file(&sub_dir_name, &file_name, &format)?;
             }
         }
 
