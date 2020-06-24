@@ -5,7 +5,7 @@ use simple_error::{SimpleError, bail};
 use serde::{Serialize, Deserialize, de::DeserializeOwned};
 use super::tree::{TreeData, SerdeFormat, NodeData, LeafData};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CurveSet<T, C> where 
     T: LikeANumber,
     C: Curve + NodeData
