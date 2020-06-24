@@ -64,13 +64,15 @@ where T: Serialize + DeserializeOwned
         let file_ext = "exp"; // Self::get_ext(format);
         let file_path = format!("{}/{}.{}", dir_name, file_name, file_ext);
         
-        let mut f = File::open(file_path).unwrap();
+        let mut f = File::open(&file_path).expect(&format!("Could not open {}", file_path));
         let mut buffer = Vec::new();
         f.read_to_end(&mut buffer)?;
 
-        match rmp_serde::from_read_ref::<_, Self>(&buffer) {
-            Err(e) => Err(Box::new(e)),
-            Ok(object) => Ok(Box::new(object))
-        }
+        let parsed = match format {
+            SerdeFormat::MessagePack => rmp_serde::from_read_ref::<_, Self>(&buffer)?,
+            SerdeFormat::Json => serde_json::from_slice(&buffer)?,
+        };
+
+       Ok(Box::new(parsed))
     }
 }
