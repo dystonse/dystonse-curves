@@ -10,7 +10,7 @@ pub use curve_set::CurveSet;
 
 use itertools::Itertools;
 use std::error::Error;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
 const EPSILON: f32 = 0.0001;
 
@@ -20,7 +20,7 @@ pub type FnResult<R> = std::result::Result<R, Box<dyn Error>>;
  * Trait to access the curve's values using f32 as type for X 
  * and Y, irrespective of the types used internally.
  */
-pub trait Curve : Debug
+pub trait Curve : Debug + Display
 {
     fn min_x(&self) -> f32;
     fn max_x(&self) -> f32;

@@ -4,6 +4,7 @@ use crate::{Curve, weighted_average, FnResult};
 use simple_error::{SimpleError, bail};
 use serde::{Serialize, Deserialize, de::DeserializeOwned};
 use super::tree::{TreeData, SerdeFormat, NodeData, LeafData};
+use std::fmt::{Display, Formatter};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CurveSet<T, C> where 
@@ -141,5 +142,19 @@ C: Curve + Serialize + DeserializeOwned + LeafData
             SerdeFormat::Json => "json",
             SerdeFormat::MessagePack => "crvs"
         }
+    }
+}
+
+impl<T, C> Display for CurveSet<T, C> where 
+T: LikeANumber + Display,
+C: Curve + Serialize + DeserializeOwned + LeafData + Display
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "CurveSet (")?;
+        for (t, c) in &self.curves {
+            write!(f, "{}: {}, ", t, c)?;
+        }
+        write!(f, ")")?;
+        Ok(())
     }
 }

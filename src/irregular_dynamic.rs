@@ -1,9 +1,9 @@
 use crate::conversion::LikeANumber;
 use crate::{Curve, EPSILON};
-use std::fmt::Debug;
 use serde::{Serialize, Deserialize};
 use itertools::Itertools;
 use crate::tree::{LeafData, SerdeFormat};
+use std::fmt::{Debug, Display, Formatter};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Tup<X, Y> where 
@@ -394,5 +394,12 @@ mod tests {
             Ok(_) => {},
             Err(e) => {println!("Error: {}", e);}
         }
+    }
+}
+
+impl<X, Y> Display for IrregularDynamicCurve<X, Y> where X: LikeANumber, Y: LikeANumber
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "IrregularDynamicCurve (min={}, med={}, max={})", self.x_at_y(0.0), self.x_at_y(0.5), self.x_at_y(1.0))
     }
 }

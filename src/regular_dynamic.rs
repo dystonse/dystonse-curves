@@ -3,6 +3,7 @@ use crate::{Curve, TypedCurve};
 use gnuplot::{Figure, Caption, Color};
 use serde::{Serialize, Deserialize};
 use crate::tree::{LeafData, SerdeFormat};
+use std::fmt::{Debug, Display, Formatter};
 
 /**
  * A curve that has a dynamic length and data points at regular distances.
@@ -228,5 +229,12 @@ where X: LikeANumber, Y: LikeANumber
             SerdeFormat::Json => "json",
             SerdeFormat::MessagePack => "rcrv"
         }
+    }
+}
+
+impl<X, Y> Display for RegularDynamicCurve<X, Y> where X: LikeANumber, Y: LikeANumber
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "RegularDynamicCurve (min={}, med={}, max={})", self.x_at_y(0.0), self.x_at_y(0.5), self.x_at_y(1.0))
     }
 }
