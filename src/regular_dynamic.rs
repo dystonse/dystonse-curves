@@ -235,6 +235,7 @@ where X: LikeANumber, Y: LikeANumber
 impl<X, Y> Display for RegularDynamicCurve<X, Y> where X: LikeANumber, Y: LikeANumber
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "RegularDynamicCurve (min={}, med={}, max={})", self.x_at_y(0.0), self.x_at_y(0.5), self.x_at_y(1.0))
+        write!(f, "RegularDynamicCurve (min={:>5}, 5%={:>5}, med={:>5}, 95%={:>5}, max={:>5})", 
+        self.x_at_y(0.0) as i32, self.x_at_y(0.05) as i32, self.x_at_y(0.5) as i32, self.x_at_y(0.95) as i32, self.x_at_y(1.0) as i32)
     }
 }
