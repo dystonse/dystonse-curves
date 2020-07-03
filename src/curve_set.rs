@@ -56,6 +56,7 @@ impl<T, C> CurveSet<T, C> where
     /// TODO this extrapolation is completely untested and is - in the best case - a
     /// bug which turned into a feature
     pub fn curve_at_x_with_extrapolation(&self, x: f32) -> IrregularDynamicCurve<f32, f32> {
+        assert!(self.curves.len() > 0, "Empty curve set");
         return self.binary_search_by_x(x, 0, self.curves.len() - 1).1;
     }
 
@@ -63,6 +64,7 @@ impl<T, C> CurveSet<T, C> where
     /// bounds, it returns the curve which is at the bounds. Otherise, two curves may be 
     /// interpolated to generate the result.
     pub fn curve_at_x_with_continuation(&self, x: f32) -> IrregularDynamicCurve<f32, f32> {
+        assert!(self.curves.len() > 0, "Empty curve set");
         if x <= self.min_x() {
             let curve = &self.curves.first().unwrap().1;
             return weighted_average(vec!{curve}, vec!{1.0});
@@ -77,6 +79,9 @@ impl<T, C> CurveSet<T, C> where
     /// bounds, it panics. Otherise, two curves may be interpolated to generate
     /// the result.
     pub fn curve_at_x(&self, x: f32) -> Result<IrregularDynamicCurve<f32, f32>, SimpleError> {
+        if self.curves.len() == 0 {
+            bail!("Empty curve set");
+        }
         if x <= self.min_x() {
             bail!("X below minimum.");
         }
