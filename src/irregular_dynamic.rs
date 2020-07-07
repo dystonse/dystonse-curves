@@ -400,7 +400,7 @@ mod tests {
 impl<X, Y> Display for IrregularDynamicCurve<X, Y> where X: LikeANumber, Y: LikeANumber
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "IrregularDynamicCurve (min={:>5}, 5%={:>5}, med={:>5}, 95%={:>5}, max={:>5})", 
-        self.x_at_y(0.0) as i32, self.x_at_y(0.05) as i32, self.x_at_y(0.5) as i32, self.x_at_y(0.95) as i32, self.x_at_y(1.0) as i32)
+        write!(f, "IrregularDynamicCurve (min={:>5}, 5%={:>5}, med={:>5}, 95%={:>5}, max={:>5}) with {} points", 
+        self.x_at_y(0.0) as i32, self.x_at_y(0.05) as i32, self.x_at_y(0.5) as i32, self.x_at_y(0.95) as i32, self.x_at_y(1.0) as i32, self.points.len())
     }
 }
