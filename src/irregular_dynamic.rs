@@ -149,7 +149,7 @@ where
         let s = Self::tuple_to_f32(&self.points[start]);
         let e = Self::tuple_to_f32(&self.points[end]);
 
-        let n = (e.1 - s.1, s.0 - e.0); // normal vector to se, transposed and one coordinate inverted
+        let n = Self::normal(&s, &e);
         for i in start+1 .. end {
             let d = self.distance(start, end, i, n);
             if d > max_d {
@@ -168,8 +168,33 @@ where
         }
     }
 
+    pub fn simplify_fixed(&mut self, max_points: usize) {
+        while self.points.len() > max_points {
+            // find the triple of points with the least distance
+            let (min_distance_index, _min_distance) = self.points.iter().tuple_windows().map(
+                |(a,b,c)| Self::distance_three_points(a, b, c)
+            ).enumerate().min_by(
+                |(_, d1), (_, d2)| d1.partial_cmp(d2).expect("NaN in curve")
+            ).unwrap(); // can't be empty, unless max_points was < 0
+            self.points.remove(min_distance_index + 1);
+        }
+    }
+
+    fn normal(a: &(f32, f32), b: &(f32, f32)) ->  (f32, f32) {
+        return  (a.1 - b.1, b.0 - a.0);
+    }
+
     fn tuple_to_f32(tup : &Tup<X, Y>) -> (f32, f32) {
         return (tup.x.make_into_f32(), tup.y.make_into_f32());
+    }
+
+    fn distance_three_points(a: &Tup<X, Y>, b: &Tup<X, Y>, c: &Tup<X, Y>) -> f32 {
+        let a_f = Self::tuple_to_f32(a);
+        let b_f = Self::tuple_to_f32(b);
+        let c_f = Self::tuple_to_f32(c);
+        let n = Self::normal(&a_f, &c_f);
+        let a_minus_b = (b_f.0 - a_f.0, b_f.1 - a_f.1);
+        return ((a_minus_b.0 * n.0 + a_minus_b.1 * n.1) / (n.0 * n.0 + n.1 * n.1).sqrt()).abs();
     }
 
     /// Compute the distance of p to the line throug s and e, where n is a normal vector of that line.
@@ -178,7 +203,7 @@ where
         let s = Self::tuple_to_f32(&self.points[start]);
         let p = Self::tuple_to_f32(&self.points[i]);
         let s_minus_p = (p.0 - s.0, p.1 - s.1);
-        return ((s_minus_p.0 * n.0 + s_minus_p.1 * n.1) / (n.0 * n.0 + n.1 * n.1).sqrt()).abs();       
+        return ((s_minus_p.0 * n.0 + s_minus_p.1 * n.1) / (n.0 * n.0 + n.1 * n.1).sqrt()).abs();
     }
 
     pub fn average(curves: &Vec<IrregularDynamicCurve<f32, f32>>) -> IrregularDynamicCurve<f32, f32> {
@@ -204,7 +229,6 @@ where
 
         return ret;
     }
-
 }
 
 impl<X, Y> Curve for IrregularDynamicCurve<X, Y>
@@ -389,6 +413,43 @@ mod tests {
         
         let c_plot = c.get_values_as_vectors();
         axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C over-simplified"), Color("green")]);
+
+        match fg.show() {
+            Ok(_) => {},
+            Err(e) => {println!("Error: {}", e);}
+        }
+    }
+
+    #[test]
+    fn test_fixed_simplification() {
+        let points = vec![
+            Tup { x: 0.0, y: 0.0 },
+            Tup { x: 100.0, y: 1.0 },
+        ];
+        let mut c = IrregularDynamicCurve::<f32, f32>::new(points);
+
+        let mut rng = rand::thread_rng();
+
+        let mut y = 0.0;
+        let mut x = 1.0;
+        while y < 0.95 {
+            y += rng.gen_range(0.0, 0.018) + (f32::sin(x as f32 / 5.0) + 1.0) / 100.0;
+            c.add_point(x, y);
+            x += 1.0;
+        }
+        
+        let mut fg = Figure::new();
+        let axes = fg.axes2d();
+        
+        let c_plot = c.get_values_as_vectors();
+        axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C original"), Color("grey")]);
+
+        c.simplify_fixed(10);
+
+        assert!(c.points.len() <= 10);
+        
+        let c_plot = c.get_values_as_vectors();
+        axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C simplified"), Color("red")]);
 
         match fg.show() {
             Ok(_) => {},
