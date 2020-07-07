@@ -29,7 +29,7 @@ pub trait Curve : Debug + Display
     fn get_values_as_vectors(&self) -> (Vec<f32>, Vec<f32>);
     fn get_x_values(&self) -> Vec<f32>; // TODO return iterator instead of Vec
     fn serialize_compact(&self) -> Vec<u8>;
-    fn serialize_compact_limited(&mut self, max_bytes: usize) -> Vec<u8>;
+    fn serialize_compact_limited(&self, max_bytes: usize) -> Vec<u8>;
 }
 
 /**

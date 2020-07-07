@@ -155,7 +155,7 @@ where X: LikeANumber, Y: LikeANumber
         panic!("Not implemented for this type.");
     }
 
-    fn serialize_compact_limited(&mut self, _max_bytes: usize) -> Vec<u8> {
+    fn serialize_compact_limited(&self, _max_bytes: usize) -> Vec<u8> {
         panic!("Not implemented for this type.");
     }
 }

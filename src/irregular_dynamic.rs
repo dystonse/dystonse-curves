@@ -329,10 +329,15 @@ where
         return ret;
     }
 
-    fn serialize_compact_limited(&mut self, max_bytes: usize) -> Vec<u8> {
+    fn serialize_compact_limited(&self, max_bytes: usize) -> Vec<u8> {
         let max_points = (max_bytes - 10) / 2;
-        self.simplify_fixed(max_points);
-        return self.serialize_compact();
+        if self.points.len() <= max_points {
+            return self.serialize_compact();
+        } else {
+            let mut clone = self.clone();
+            clone.simplify_fixed(max_points);
+            return clone.serialize_compact();
+        }
     }
 }
 
