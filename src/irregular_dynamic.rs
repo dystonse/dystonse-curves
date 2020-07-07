@@ -231,36 +231,6 @@ where
         return ret;
     }
 
-    pub fn serialize_compact(&self) -> Vec<u8> {
-        let min_x = self.min_x();
-        let max_x = self.max_x();
-        
-        let mut ret = Vec::with_capacity(self.points.len() * 2 + 10);
-        ret.push(1 as u8); // Type is 1 by definition
-
-        ret.extend(&min_x.to_le_bytes());
-        ret.extend(&max_x.to_le_bytes());
-
-        ret.push(self.points.len() as u8);
-
-        for point in &self.points {
-            let x_f = point.x.make_into_f32();
-            let y_f = point.y.make_into_f32();
-            let x_b = ((x_f - min_x) / (max_x - min_x) * 255.0) as u8;
-            let y_b = (y_f * 255.0) as u8;
-            ret.push(x_b);
-            ret.push(y_b);
-        }
-
-        return ret;
-    }
-
-    pub fn serialize_compact_limited(&mut self, max_bytes: usize) -> Vec<u8> {
-        let max_points = (max_bytes - 10) / 2;
-        self.simplify_fixed(max_points);
-        return self.serialize_compact();
-    }
-
     pub fn deserialize_compact(bytes: Vec<u8>) -> Self {
         assert!(bytes[0] == 1); // check type
         let min_x = f32::from_le_bytes(bytes[1..5].try_into().unwrap());
@@ -333,6 +303,36 @@ where
 
     fn get_x_values(&self) -> Vec<f32> {
         return self.points.iter().map(|p| p.x.make_into_f32()).collect();
+    }
+
+    fn serialize_compact(&self) -> Vec<u8> {
+        let min_x = self.min_x();
+        let max_x = self.max_x();
+        
+        let mut ret = Vec::with_capacity(self.points.len() * 2 + 10);
+        ret.push(1 as u8); // Type is 1 by definition
+
+        ret.extend(&min_x.to_le_bytes());
+        ret.extend(&max_x.to_le_bytes());
+
+        ret.push(self.points.len() as u8);
+
+        for point in &self.points {
+            let x_f = point.x.make_into_f32();
+            let y_f = point.y.make_into_f32();
+            let x_b = ((x_f - min_x) / (max_x - min_x) * 255.0) as u8;
+            let y_b = (y_f * 255.0) as u8;
+            ret.push(x_b);
+            ret.push(y_b);
+        }
+
+        return ret;
+    }
+
+    fn serialize_compact_limited(&mut self, max_bytes: usize) -> Vec<u8> {
+        let max_points = (max_bytes - 10) / 2;
+        self.simplify_fixed(max_points);
+        return self.serialize_compact();
     }
 }
 

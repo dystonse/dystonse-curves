@@ -150,6 +150,14 @@ where X: LikeANumber, Y: LikeANumber
         // but is this actually efficient, and does it work for floats?
         return vec;
     }
+
+    fn serialize_compact(&self) -> Vec<u8> {
+        panic!("Not implemented for this type.");
+    }
+
+    fn serialize_compact_limited(&mut self, _max_bytes: usize) -> Vec<u8> {
+        panic!("Not implemented for this type.");
+    }
 }
 
 impl<X, Y> TypedCurve<X, Y> for RegularDynamicCurve<X, Y>
