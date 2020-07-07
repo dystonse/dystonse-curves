@@ -4,6 +4,7 @@ use serde::{Serialize, Deserialize};
 use itertools::Itertools;
 use crate::tree::{LeafData, SerdeFormat};
 use std::fmt::{Debug, Display, Formatter};
+use std::convert::TryInto;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Tup<X, Y> where 
@@ -229,6 +230,57 @@ where
 
         return ret;
     }
+
+    pub fn serialize_compact(&self) -> Vec<u8> {
+        let min_x = self.min_x();
+        let max_x = self.max_x();
+        
+        let mut ret = Vec::with_capacity(self.points.len() * 2 + 10);
+        ret.push(1 as u8); // Type is 1 by definition
+
+        ret.extend(&min_x.to_le_bytes());
+        ret.extend(&max_x.to_le_bytes());
+
+        ret.push(self.points.len() as u8);
+
+        for point in &self.points {
+            let x_f = point.x.make_into_f32();
+            let y_f = point.y.make_into_f32();
+            let x_b = ((x_f - min_x) / (max_x - min_x) * 255.0) as u8;
+            let y_b = (y_f * 255.0) as u8;
+            ret.push(x_b);
+            ret.push(y_b);
+        }
+
+        return ret;
+    }
+
+    pub fn serialize_compact_limited(&mut self, max_bytes: usize) -> Vec<u8> {
+        let max_points = (max_bytes - 10) / 2;
+        self.simplify_fixed(max_points);
+        return self.serialize_compact();
+    }
+
+    pub fn deserialize_compact(bytes: Vec<u8>) -> Self {
+        assert!(bytes[0] == 1); // check type
+        let min_x = f32::from_le_bytes(bytes[1..5].try_into().unwrap());
+        let max_x = f32::from_le_bytes(bytes[5..9].try_into().unwrap());
+        let len = bytes[9] as usize;
+
+        assert!(bytes.len() >= 10 + 2 * len, "Byte array to short for declared length.");
+
+        let mut points = Vec::with_capacity(len);
+        for i in 0..len {
+            let x_b = bytes[10 + 2*i];
+            let y_b = bytes[11 + 2*i];     
+            
+            let x_f = min_x + (x_b as f32) / 255.0 * max_x - min_x;
+            let y_f = (y_b as f32) / 255.0;
+            points.push(Tup {x: X::make_from_f32(x_f), y: Y::make_from_f32(y_f)});
+        }
+
+        IrregularDynamicCurve::new(points)
+    }
 }
 
 impl<X, Y> Curve for IrregularDynamicCurve<X, Y>
@@ -424,7 +476,7 @@ mod tests {
     fn test_fixed_simplification() {
         let points = vec![
             Tup { x: 0.0, y: 0.0 },
-            Tup { x: 100.0, y: 1.0 },
+            Tup { x: 200.0, y: 1.0 },
         ];
         let mut c = IrregularDynamicCurve::<f32, f32>::new(points);
 
@@ -433,7 +485,7 @@ mod tests {
         let mut y = 0.0;
         let mut x = 1.0;
         while y < 0.95 {
-            y += rng.gen_range(0.0, 0.018) + (f32::sin(x as f32 / 5.0) + 1.0) / 100.0;
+            y += rng.gen_range(0.0, 0.005) + (f32::sin(x as f32 / 5.0) + 1.0) / 220.0;
             c.add_point(x, y);
             x += 1.0;
         }
@@ -444,12 +496,21 @@ mod tests {
         let c_plot = c.get_values_as_vectors();
         axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C original"), Color("grey")]);
 
-        c.simplify_fixed(10);
+        // c.simplify_fixed(10);
 
-        assert!(c.points.len() <= 10);
+        // assert!(c.points.len() <= 10);
         
-        let c_plot = c.get_values_as_vectors();
-        axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C simplified"), Color("red")]);
+        // let c_plot = c.get_values_as_vectors();
+        // axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C simplified"), Color("red")]);
+
+        let ser = c.serialize_compact_limited(120);
+        println!("Serialized curve with {} points in {} bytes:" , c.points.len(), ser.len());
+  
+        let deser = IrregularDynamicCurve::<f32, f32>::deserialize_compact(ser);
+
+        let c_plot = deser.get_values_as_vectors();
+        axes.lines_points(&c_plot.0, &c_plot.1, &[Caption("C deserialized"), Color("green")]);
+
 
         match fg.show() {
             Ok(_) => {},
