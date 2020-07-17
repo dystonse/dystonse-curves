@@ -207,7 +207,7 @@ where
         return ((s_minus_p.0 * n.0 + s_minus_p.1 * n.1) / (n.0 * n.0 + n.1 * n.1).sqrt()).abs();
     }
 
-    pub fn average(curves: &Vec<IrregularDynamicCurve<f32, f32>>) -> IrregularDynamicCurve<f32, f32> {
+    pub fn average(curves: &Vec<&IrregularDynamicCurve<f32, f32>>) -> IrregularDynamicCurve<f32, f32> {
 
         // correction factor to make the weights add up to 1.0:
         let f = 1.0 / curves.len() as f32;
