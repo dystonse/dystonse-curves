@@ -240,13 +240,20 @@ where
         assert!(bytes.len() >= 10 + 2 * len, "Byte array to short for declared length.");
 
         let mut points = Vec::with_capacity(len);
+        let mut previous_x_b: i32 = -1;
         for i in 0..len {
             let x_b = bytes[10 + 2*i];
-            let y_b = bytes[11 + 2*i];     
+            let y_b = bytes[11 + 2*i];
             
-            let x_f = min_x + (x_b as f32) / 255.0 * max_x - min_x;
-            let y_f = (y_b as f32) / 255.0;
-            points.push(Tup {x: X::make_from_f32(x_f), y: Y::make_from_f32(y_f)});
+            // TODO this is a hack to fix an error which originally happened
+            // during serialization in deserialization instead.
+            // The resulting curve may have less points than we allocated in the vec.
+            if x_b as i32 != previous_x_b {
+                let x_f = min_x + (x_b as f32) / 255.0 * max_x - min_x;
+                let y_f = (y_b as f32) / 255.0;
+                points.push(Tup {x: X::make_from_f32(x_f), y: Y::make_from_f32(y_f)});
+                previous_x_b = x_b as i32;
+            }
         }
 
         IrregularDynamicCurve::new(points)
