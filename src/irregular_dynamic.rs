@@ -249,7 +249,7 @@ where
             // during serialization in deserialization instead.
             // The resulting curve may have less points than we allocated in the vec.
             if x_b as i32 != previous_x_b {
-                let x_f = min_x + (x_b as f32) / 255.0 * max_x - min_x;
+                let x_f = min_x + (x_b as f32) / 255.0 * (max_x - min_x);
                 let y_f = (y_b as f32) / 255.0;
                 points.push(Tup {x: X::make_from_f32(x_f), y: Y::make_from_f32(y_f)});
                 previous_x_b = x_b as i32;
