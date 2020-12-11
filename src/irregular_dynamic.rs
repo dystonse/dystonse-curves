@@ -108,7 +108,7 @@ where
             let l = &self.points[i];
             let r = &self.points[i + 1];
             assert!(l.x < r.x, "Unsorted x values or duplicate x value.");
-            assert!(l.y <= r.y, "Y does not increase montonously for increasing x.");
+            assert!(l.y <= r.y, "Y does not increase montonously for increasing x. Value goes from {:?} to {:?}", l.y, r.y);
         }
     }
 
@@ -213,15 +213,19 @@ where
         let f = 1.0 / curves.len() as f32;
 
         // gather x values from all curves:
-        let x_values = curves.iter().map(|c| c.get_x_values()).kmerge().dedup();
+        let x_values : Vec<f32> = curves.iter().map(|c| c.get_x_values()).kmerge().dedup().collect();
+
+        if x_values.len() > 1000 {
+            println!("Large curve average operation: {} curves have {} distinct x values.", curves.len(), x_values.len());
+        }
 
         // this is where the actual interpolation happens:
-        let points = x_values.map(|x| {
+        let points = x_values.iter().map(|x| {
             let mut y = 0.0;
             for c in curves.iter() {
-                y += c.y_at_x(x);
+                y += c.y_at_x(*x);
             }
-            Tup {x, y: y * f}
+            Tup {x: *x, y: y * f}
         }).collect();
 
         // make a curve from all the newly calculated points, throwing away unnecessary ones:
